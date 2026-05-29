@@ -46,63 +46,52 @@ export async function getSpotAvailability(
   startDate: Date,
   endDate: Date
 ): Promise<SpotAvailability[]> {
+  const start = startOfDay(startDate);
+  const end = startOfDay(endDate);
+
   try {
-    // Získat všechna místa a jejich pozice
-    const { data: spots, error: spotsError } = await supabase
-      .from("fishing_spots")
-      .select("*, spot_positions(*)");
-
-    if (spotsError) {
-      console.error("Error fetching spots:", spotsError);
-      throw spotsError;
-    }
-
-    console.log("Loaded spots from database:", spots);
-
-    // Získat všechny rezervace v daném období
-    const { data: reservations, error: resError } = await supabase
+    const { data: reservations, error } = await supabase
       .from("reservations")
-      .select("*")
-      .neq("status", "cancelled")
-      .or(`start_date.lte.${endDate.toISOString()},end_date.gte.${startDate.toISOString()}`);
+      .select("spot_id, position_id, start_date, end_date, status")
+      .lte("start_date", end.toISOString())
+      .gte("end_date", start.toISOString())
+      .in("status", ["new", "confirmed", "paid"]);
 
-    if (resError) {
-      console.error("Error fetching reservations:", resError);
-      throw resError;
+    if (error) throw error;
+
+    // Inicializace dostupnosti všech 14 míst (2 pozice na místo)
+    const totalSpots = 14;
+    const availability: SpotAvailability[] = [];
+
+    for (let spotNum = 1; spotNum <= totalSpots; spotNum++) {
+      // Spočítat kolik pozic na tomto místě je obsazeno
+      const occupiedPositions = new Set<number>();
+      
+      reservations?.forEach((res) => {
+        if (res.spot_id === spotNum) {
+          const resStart = startOfDay(new Date(res.start_date));
+          const resEnd = startOfDay(new Date(res.end_date));
+          
+          // Zkontrolovat překryv dat
+          if (resStart <= end && resEnd >= start) {
+            occupiedPositions.add(res.position_id);
+          }
+        }
+      });
+
+      const availablePositions = 2 - occupiedPositions.size;
+
+      availability.push({
+        spotNumber: spotNum,
+        available: availablePositions,
+        occupied: occupiedPositions.size,
+      });
     }
-
-    console.log("Loaded reservations:", reservations);
-
-    // Spočítat dostupnost pro každé místo
-    const availability: SpotAvailability[] = spots?.map((spot: any) => {
-      const positions = spot.spot_positions || [];
-      const totalPositions = positions.length;
-
-      // Najít všechny rezervace pro toto místo v daném období
-      const spotReservations = reservations?.filter(
-        (res) => res.spot_id === spot.id
-      ) || [];
-
-      // Spočítat kolik pozic je obsazených
-      const occupiedPositions = new Set(
-        spotReservations.map((res) => res.position_id)
-      ).size;
-
-      return {
-        spotNumber: spot.number || spot.id, // fallback na id pokud number neexistuje
-        available: totalPositions - occupiedPositions,
-        total: totalPositions,
-        x: parseFloat(spot.x_position || spot.position_x || 0),
-        y: parseFloat(spot.y_position || spot.position_y || 0),
-      };
-    }) || [];
-
-    console.log("Calculated availability:", availability);
 
     return availability;
   } catch (error) {
-    console.error("Error fetching availability:", error);
-    return [];
+    console.error("Error getting spot availability:", error);
+    throw error;
   }
 }
 
