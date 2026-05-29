@@ -15,21 +15,22 @@ export interface ReservationSuggestion {
   type: "perfect" | "adjacent" | "separated";
 }
 
-// Definice sousednosti míst podle mapy (místa vedle sebe)
+// Definice sousednosti míst podle mapy (místa vedle sebe, číslované zprava doleva)
 const adjacentSpots: Record<number, number[]> = {
-  1: [2, 13],
+  1: [2],      // vpravo nahoře
   2: [1, 3],
   3: [2, 4],
   4: [3, 5],
   5: [4, 6],
   6: [5, 7],
   7: [6, 8],
-  8: [7, 9],
+  8: [7, 9],   // dole uprostřed
   9: [8, 10],
   10: [9, 11],
   11: [10, 12],
   12: [11, 13],
-  13: [12, 1],
+  13: [12, 14],
+  14: [13],    // vlevo nahoře
 };
 
 /**

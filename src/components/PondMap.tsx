@@ -16,21 +16,22 @@ export function PondMap({ dateRange, fishermanCount, onSpotSelect, suggestedSpot
   const [hoveredSpot, setHoveredSpot] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Přesné pozice podle červených značek na mapě - lovná místa podél jednoho břehu
+  // Přesné pozice podle mapy - 14 míst číslovaných zprava doleva
   const spotPositions = [
-    { number: 1, x: 11, y: 28 },   // Levý horní
-    { number: 2, x: 18, y: 25 },   
-    { number: 3, x: 21, y: 32 },   
-    { number: 4, x: 24, y: 40 },   
-    { number: 5, x: 28, y: 49 },   
-    { number: 6, x: 34, y: 58 },   
-    { number: 7, x: 42, y: 66 },   
-    { number: 8, x: 50, y: 72 },   // Dole uprostřed
-    { number: 9, x: 58, y: 74 },   
-    { number: 10, x: 66, y: 71 },  
-    { number: 11, x: 73, y: 64 },  
-    { number: 12, x: 78, y: 54 },  
-    { number: 13, x: 82, y: 42 },  // Pravý horní
+    { number: 1, x: 89, y: 40 },   // 1 - vpravo nahoře
+    { number: 2, x: 86, y: 47 },   // 2
+    { number: 3, x: 82, y: 54 },   // 3
+    { number: 4, x: 76, y: 60 },   // 4
+    { number: 5, x: 69, y: 66 },   // 5
+    { number: 6, x: 62, y: 70 },   // 6
+    { number: 7, x: 54, y: 73 },   // 7
+    { number: 8, x: 46, y: 74 },   // 8 - dole uprostřed
+    { number: 9, x: 38, y: 72 },   // 9
+    { number: 10, x: 31, y: 68 },  // 10
+    { number: 11, x: 25, y: 62 },  // 11
+    { number: 12, x: 20, y: 54 },  // 12
+    { number: 13, x: 16, y: 45 },  // 13
+    { number: 14, x: 13, y: 35 },  // 14 - vlevo nahoře
   ];
 
   useEffect(() => {
@@ -89,9 +90,9 @@ export function PondMap({ dateRange, fishermanCount, onSpotSelect, suggestedSpot
       </CardHeader>
       <CardContent>
         <div className="relative w-full rounded-lg overflow-hidden border">
-          {/* Pozadí s fotografií rybníku */}
+          {/* Pozadí s čistou fotografií rybníku */}
           <img 
-            src="/pond-map.jpg" 
+            src="/Mapa-Rybnik-Ostrata-scaled.jpg" 
             alt="Mapa rybníku Ostrata" 
             className="w-full h-auto block"
           />
