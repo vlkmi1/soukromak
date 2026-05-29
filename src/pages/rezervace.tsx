@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { CalendarIcon, Users, Info, CheckCircle2, AlertCircle } from "lucide-react";
+import { CalendarIcon, Users, Info, CheckCircle2, AlertCircle, Lightbulb } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getSpotAvailability, findBestSpotCombination, type ReservationSuggestion } from "@/services/reservationService";
+import { 
+  getSpotAvailability, 
+  findBestSpotCombination, 
+  checkAdjacentAvailability,
+  findAllPossibleCombinations,
+  type ReservationSuggestion,
+  type SpotCombination
+} from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRange } from "react-day-picker";
 
@@ -34,30 +41,62 @@ export default function ReservationPage() {
   });
   const [fishermanCount, setFishermanCount] = useState("1");
   const [selectedSpot, setSelectedSpot] = useState<number | null>(null);
+  const [manuallySelected, setManuallySelected] = useState(false);
   const [suggestion, setSuggestion] = useState<ReservationSuggestion | null>(null);
+  const [allCombinations, setAllCombinations] = useState<SpotCombination[]>([]);
   const [showForm, setShowForm] = useState(false);
 
   const handleSpotSelect = (spotNumber: number) => {
     setSelectedSpot(spotNumber);
-    setShowForm(true);
+    setManuallySelected(true);
+    setShowForm(false);
+    
+    // Zkontrolovat sousední místa pro manuální výběr
+    if (dateRange.from && dateRange.to) {
+      checkManualSelection(spotNumber);
+    }
   };
 
-  const handleCheckAvailability = async () => {
+  const checkManualSelection = async (spotNumber: number) => {
+    if (!dateRange.from || !dateRange.to) return;
+
+    const availability = await getSpotAvailability(dateRange.from, dateRange.to);
+    const adjacentCheck = checkAdjacentAvailability(spotNumber, parseInt(fishermanCount), availability);
+    
+    setSuggestion(adjacentCheck);
+    setAllCombinations([]);
+  };
+
+  const handleAutomaticSearch = async () => {
     if (!dateRange.from || !dateRange.to) return;
 
     const availability = await getSpotAvailability(dateRange.from, dateRange.to);
     const bestCombination = findBestSpotCombination(parseInt(fishermanCount), availability);
+    const allPossible = findAllPossibleCombinations(parseInt(fishermanCount), availability);
     
     setSuggestion(bestCombination);
+    setAllCombinations(allPossible);
+    setManuallySelected(false);
     
-    if (bestCombination && bestCombination.spots.length === 1) {
+    if (bestCombination && bestCombination.spots.length > 0) {
       setSelectedSpot(bestCombination.spots[0]);
     }
   };
 
+  const handleCombinationSelect = (spots: number[]) => {
+    setSelectedSpot(spots[0]);
+    setSuggestion({
+      spots: spots,
+      isOptimal: true,
+      message: `Vybráno: Místa ${spots.join("+")}`,
+      type: "adjacent",
+    });
+    setShowForm(true);
+  };
+
   useEffect(() => {
-    if (dateRange.from && dateRange.to) {
-      handleCheckAvailability();
+    if (dateRange.from && dateRange.to && !manuallySelected) {
+      handleAutomaticSearch();
     }
   }, [dateRange, fishermanCount]);
 
@@ -125,7 +164,10 @@ export default function ReservationPage() {
                         <Calendar
                           mode="range"
                           selected={dateRange}
-                          onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
+                          onSelect={(range) => {
+                            setDateRange(range || { from: undefined, to: undefined });
+                            setManuallySelected(false);
+                          }}
                           numberOfMonths={2}
                           locale={cs}
                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
@@ -141,7 +183,13 @@ export default function ReservationPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="fisherman-count">Počet rybářů</Label>
-                    <Select value={fishermanCount} onValueChange={setFishermanCount}>
+                    <Select 
+                      value={fishermanCount} 
+                      onValueChange={(val) => {
+                        setFishermanCount(val);
+                        setManuallySelected(false);
+                      }}
+                    >
                       <SelectTrigger id="fisherman-count">
                         <SelectValue />
                       </SelectTrigger>
@@ -158,12 +206,43 @@ export default function ReservationPage() {
                       {suggestion.isOptimal ? (
                         <CheckCircle2 className="h-4 w-4" />
                       ) : (
-                        <Info className="h-4 w-4" />
+                        <AlertCircle className="h-4 w-4" />
                       )}
                       <AlertDescription className="text-sm">
                         {suggestion.message}
                       </AlertDescription>
                     </Alert>
+                  )}
+
+                  {/* Zobrazení všech možných kombinací */}
+                  {!manuallySelected && allCombinations.length > 1 && (
+                    <Card className="border-accent">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4 text-accent" />
+                          Dostupné možnosti ({allCombinations.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {allCombinations.slice(0, 10).map((combo, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleCombinationSelect(combo.spots)}
+                            className="w-full text-left p-3 rounded-lg border border-border hover:border-accent hover:bg-accent/10 transition-colors"
+                          >
+                            <div className="font-medium text-sm">{combo.description}</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Klikněte pro rezervaci
+                            </div>
+                          </button>
+                        ))}
+                        {allCombinations.length > 10 && (
+                          <p className="text-xs text-muted-foreground text-center pt-2">
+                            ... a dalších {allCombinations.length - 10} možností
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
                   )}
 
                   {!dateRange.from && (
@@ -183,7 +262,8 @@ export default function ReservationPage() {
                   onSuccess={() => {
                     setShowForm(false);
                     setSelectedSpot(null);
-                    handleCheckAvailability();
+                    setManuallySelected(false);
+                    handleAutomaticSearch();
                   }}
                 />
               )}
@@ -197,6 +277,18 @@ export default function ReservationPage() {
                 onSpotSelect={handleSpotSelect}
                 suggestedSpots={suggestion?.spots || []}
               />
+              
+              {manuallySelected && suggestion?.isOptimal && (
+                <div className="mt-4">
+                  <Button 
+                    onClick={() => setShowForm(true)}
+                    size="lg"
+                    className="w-full"
+                  >
+                    Pokračovat k rezervaci
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

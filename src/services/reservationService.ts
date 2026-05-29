@@ -12,7 +12,13 @@ export interface ReservationSuggestion {
   spots: number[];
   isOptimal: boolean;
   message: string;
-  type: "perfect" | "adjacent" | "separated";
+  type: "perfect" | "adjacent" | "separated" | "manual_with_adjacent" | "manual_no_adjacent";
+}
+
+export interface SpotCombination {
+  spots: number[];
+  description: string;
+  isOptimal: boolean;
 }
 
 // Definice sousednosti míst podle mapy (místa vedle sebe, číslované zprava doleva)
@@ -89,70 +95,163 @@ export async function getSpotAvailability(
 }
 
 /**
- * Najde nejlepší kombinaci míst pro daný počet rybářů
+ * Zkontroluje dostupnost sousedních míst pro manuálně vybrané místo
  */
-export function findBestSpotCombination(
+export function checkAdjacentAvailability(
+  selectedSpot: number,
   fishermanCount: number,
   availability: SpotAvailability[]
 ): ReservationSuggestion | null {
-  // Pro 1-2 rybáře: najdi jedno místo s dostatečnou kapacitou
-  if (fishermanCount <= 2) {
-    const suitableSpot = availability.find(
-      (spot) => spot.available >= fishermanCount
-    );
+  const spot = availability.find((s) => s.spotNumber === selectedSpot);
+  
+  if (!spot) return null;
 
-    if (suitableSpot) {
+  // Pro 1-2 rybáře stačí jedno místo
+  if (fishermanCount <= 2) {
+    if (spot.available >= fishermanCount) {
       return {
-        spots: [suitableSpot.spotNumber],
+        spots: [selectedSpot],
         isOptimal: true,
-        message: `Místo ${suitableSpot.spotNumber} je volné pro ${fishermanCount} rybáře`,
+        message: `Místo ${selectedSpot} je volné pro ${fishermanCount} ${fishermanCount === 1 ? "rybáře" : "rybáře"}`,
         type: "perfect",
       };
     }
-
-    return null;
+    return {
+      spots: [selectedSpot],
+      isOptimal: false,
+      message: `Místo ${selectedSpot} nemá dostatečnou kapacitu (volné: ${spot.available}, potřeba: ${fishermanCount})`,
+      type: "manual_no_adjacent",
+    };
   }
 
-  // Pro 3 rybáře: hledáme ideálně místo pro 2 + sousední místo pro 1
+  // Pro 3 rybáře - kontrola sousedních míst
   if (fishermanCount === 3) {
-    // Hledáme místo s 2 volnými pozicemi
-    const spotsWithTwo = availability.filter((spot) => spot.available === 2);
+    if (spot.available < 2) {
+      return {
+        spots: [selectedSpot],
+        isOptimal: false,
+        message: `Místo ${selectedSpot} nemá dostatečnou kapacitu (volné pozice: ${spot.available})`,
+        type: "manual_no_adjacent",
+      };
+    }
 
-    for (const spot of spotsWithTwo) {
-      // Kontrola sousedních míst
-      const neighbors = adjacentSpots[spot.spotNumber] || [];
-      const adjacentSpot = neighbors.find((neighborNum) => {
-        const neighbor = availability.find((s) => s.spotNumber === neighborNum);
-        return neighbor && neighbor.available >= 1;
-      });
+    // Kontrola sousedních míst
+    const neighbors = adjacentSpots[selectedSpot] || [];
+    const availableNeighbors: number[] = [];
 
-      if (adjacentSpot) {
-        return {
-          spots: [spot.spotNumber, adjacentSpot],
-          isOptimal: true,
-          message: `Místo ${spot.spotNumber} (2 rybáři) a sousední místo ${adjacentSpot} (1 rybář)`,
-          type: "adjacent",
-        };
+    for (const neighborNum of neighbors) {
+      const neighbor = availability.find((s) => s.spotNumber === neighborNum);
+      if (neighbor && neighbor.available >= 1) {
+        availableNeighbors.push(neighborNum);
       }
     }
 
-    // Pokud nemáme sousední, nabídneme nejbližší dostupné
-    const spotWith2 = availability.find((spot) => spot.available === 2);
-    const spotWith1 = availability.find(
-      (spot) => spot.available >= 1 && spot.spotNumber !== spotWith2?.spotNumber
-    );
-
-    if (spotWith2 && spotWith1) {
+    if (availableNeighbors.length > 0) {
+      const neighborsList = availableNeighbors.map(n => `#${n}`).join(" nebo ");
       return {
-        spots: [spotWith2.spotNumber, spotWith1.spotNumber],
+        spots: [selectedSpot, availableNeighbors[0]],
+        isOptimal: true,
+        message: `Vybrali jste místo ${selectedSpot} (2 rybáři). Sousední místo ${neighborsList} je také volné pro 3. rybáře.`,
+        type: "manual_with_adjacent",
+      };
+    } else {
+      return {
+        spots: [selectedSpot],
         isOptimal: false,
-        message: `Místo ${spotWith2.spotNumber} (2 rybáři) a místo ${spotWith1.spotNumber} (1 rybář) - nejsou hned vedle sebe`,
-        type: "separated",
+        message: `Vybrali jste místo ${selectedSpot} (2 rybáři). Bohužel sousední místa nejsou volná pro 3. rybáře.`,
+        type: "manual_no_adjacent",
       };
     }
   }
 
   return null;
+}
+
+/**
+ * Najde VŠECHNY možné kombinace sousedních míst pro daný počet rybářů
+ */
+export function findAllPossibleCombinations(
+  fishermanCount: number,
+  availability: SpotAvailability[]
+): SpotCombination[] {
+  const combinations: SpotCombination[] = [];
+
+  // Pro 1-2 rybáře: najdi všechna volná místa s dostatečnou kapacitou
+  if (fishermanCount <= 2) {
+    const suitableSpots = availability.filter(
+      (spot) => spot.available >= fishermanCount
+    );
+
+    return suitableSpots.map((spot) => ({
+      spots: [spot.spotNumber],
+      description: `Místo ${spot.spotNumber} (${fishermanCount} ${fishermanCount === 1 ? "rybář" : "rybáři"})`,
+      isOptimal: true,
+    }));
+  }
+
+  // Pro 3 rybáře: hledáme všechny kombinace místo pro 2 + sousední místo pro 1
+  if (fishermanCount === 3) {
+    const spotsWithTwo = availability.filter((spot) => spot.available >= 2);
+
+    for (const spot of spotsWithTwo) {
+      const neighbors = adjacentSpots[spot.spotNumber] || [];
+      
+      for (const neighborNum of neighbors) {
+        const neighbor = availability.find((s) => s.spotNumber === neighborNum);
+        if (neighbor && neighbor.available >= 1) {
+          combinations.push({
+            spots: [spot.spotNumber, neighborNum],
+            description: `Místa ${spot.spotNumber}+${neighborNum} (vedle sebe)`,
+            isOptimal: true,
+          });
+        }
+      }
+    }
+  }
+
+  return combinations;
+}
+
+/**
+ * Najde nejlepší kombinaci míst pro daný počet rybářů (pro automatický výběr)
+ */
+export function findBestSpotCombination(
+  fishermanCount: number,
+  availability: SpotAvailability[]
+): ReservationSuggestion | null {
+  const allCombinations = findAllPossibleCombinations(fishermanCount, availability);
+
+  if (allCombinations.length === 0) {
+    return {
+      spots: [],
+      isOptimal: false,
+      message: "Pro vybraný termín a počet rybářů nejsou dostupná žádná vhodná místa.",
+      type: "separated",
+    };
+  }
+
+  if (allCombinations.length === 1) {
+    const combo = allCombinations[0];
+    return {
+      spots: combo.spots,
+      isOptimal: combo.isOptimal,
+      message: combo.description,
+      type: combo.isOptimal ? "perfect" : "separated",
+    };
+  }
+
+  // Více možností
+  const descriptions = allCombinations
+    .slice(0, 5) // max 5 možností pro přehlednost
+    .map((c) => c.description)
+    .join(", ");
+
+  return {
+    spots: allCombinations[0].spots,
+    isOptimal: true,
+    message: `Nalezeno ${allCombinations.length} možností: ${descriptions}${allCombinations.length > 5 ? " a další..." : ""}`,
+    type: "adjacent",
+  };
 }
 
 /**
