@@ -22,19 +22,19 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
 
   // Přesné pozice podle skutečné mapy rybníku (percentage based on image)
   const spotPositions = [
-    { number: 1, x: 18, y: 28 },   // Levý horní břeh
-    { number: 2, x: 26, y: 20 },   // Horní břeh vlevo
-    { number: 3, x: 38, y: 16 },   // Horní střed
-    { number: 4, x: 48, y: 18 },   // Horní střed-vpravo (červený)
-    { number: 5, x: 58, y: 22 },   // Pravý horní břeh
-    { number: 6, x: 68, y: 32 },   // Pravý břeh nahoře
-    { number: 7, x: 72, y: 45 },   // Pravý břeh střed
-    { number: 8, x: 75, y: 62 },   // Pravý dolní břeh
-    { number: 9, x: 68, y: 75 },   // Dolní břeh vpravo
-    { number: 10, x: 52, y: 82 },  // Dolní střed
-    { number: 11, x: 38, y: 84 },  // Dolní střed-vlevo (červený)
-    { number: 12, x: 24, y: 78 },  // Dolní levý břeh
-    { number: 13, x: 12, y: 58 },  // Levý střední břeh
+    { number: 1, x: 12, y: 35 },   // 1
+    { number: 2, x: 26, y: 17 },   // 2
+    { number: 3, x: 41, y: 12 },   // 3
+    { number: 4, x: 56, y: 14 },   // 4
+    { number: 5, x: 69, y: 21 },   // 5
+    { number: 6, x: 77, y: 36 },   // 6
+    { number: 7, x: 79, y: 55 },   // 7
+    { number: 8, x: 72, y: 74 },   // 8
+    { number: 9, x: 57, y: 86 },   // 9
+    { number: 10, x: 42, y: 90 },  // 10
+    { number: 11, x: 28, y: 87 },  // 11
+    { number: 12, x: 15, y: 77 },  // 12
+    { number: 13, x: 9, y: 55 },   // 13
   ];
 
   useEffect(() => {
