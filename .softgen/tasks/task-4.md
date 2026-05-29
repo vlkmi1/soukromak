@@ -1,6 +1,6 @@
 ---
 title: Admin panel pro správu rezervací
-status: in_progress
+status: done
 priority: medium
 type: feature
 tags: [admin, backend]
