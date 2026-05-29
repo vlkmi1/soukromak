@@ -19,13 +19,13 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
     { number: 4, x: 70, y: 59 },   // 4
     { number: 5, x: 64, y: 64 },   // 5
     { number: 6, x: 57, y: 68 },   // 6
-    { number: 7, x: 50, y: 71 },   // 7
-    { number: 8, x: 43, y: 72 },   // 8 - dole uprostřed
-    { number: 9, x: 36, y: 71 },   // 9
-    { number: 10, x: 30, y: 67 },  // 10
-    { number: 11, x: 25, y: 62 },  // 11
-    { number: 12, x: 21, y: 56 },  // 12
-    { number: 13, x: 18, y: 48 },  // 13
+    { number: 7, x: 52, y: 66 },   // 7 - nahoru a doprava
+    { number: 8, x: 46, y: 67 },   // 8 - nahoru a doprava
+    { number: 9, x: 40, y: 66 },   // 9 - nahoru a doprava
+    { number: 10, x: 34, y: 63 },  // 10 - nahoru a doprava
+    { number: 11, x: 29, y: 58 },  // 11 - nahoru a doprava
+    { number: 12, x: 25, y: 52 },  // 12 - nahoru a doprava
+    { number: 13, x: 22, y: 45 },  // 13 - nahoru a doprava
     { number: 14, x: 16, y: 40 },  // 14 - vlevo nahoře
   ];
 
