@@ -11,21 +11,22 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
   const isSpotSelected = (spotNumber: number) => selectedSpots.includes(spotNumber);
 
   // Přesné pozice podle mapy - 14 míst číslovaných zprava doleva
+  // Upraveno: místa blíž ke břehu, na vodě
   const spotPositions = [
-    { number: 1, x: 89, y: 40 },   // 1 - vpravo nahoře
-    { number: 2, x: 86, y: 47 },   // 2
-    { number: 3, x: 82, y: 54 },   // 3
-    { number: 4, x: 76, y: 60 },   // 4
-    { number: 5, x: 69, y: 66 },   // 5
-    { number: 6, x: 62, y: 70 },   // 6
-    { number: 7, x: 54, y: 73 },   // 7
-    { number: 8, x: 46, y: 74 },   // 8 - dole uprostřed
-    { number: 9, x: 38, y: 72 },   // 9
-    { number: 10, x: 31, y: 68 },  // 10
+    { number: 1, x: 82, y: 42 },   // 1 - vpravo nahoře (blíž k vodě)
+    { number: 2, x: 79, y: 48 },   // 2 (blíž k vodě)
+    { number: 3, x: 75, y: 54 },   // 3
+    { number: 4, x: 70, y: 59 },   // 4
+    { number: 5, x: 64, y: 64 },   // 5
+    { number: 6, x: 57, y: 68 },   // 6
+    { number: 7, x: 50, y: 71 },   // 7
+    { number: 8, x: 43, y: 72 },   // 8 - dole uprostřed
+    { number: 9, x: 36, y: 71 },   // 9
+    { number: 10, x: 30, y: 67 },  // 10
     { number: 11, x: 25, y: 62 },  // 11
-    { number: 12, x: 20, y: 54 },  // 12
-    { number: 13, x: 16, y: 45 },  // 13
-    { number: 14, x: 13, y: 35 },  // 14 - vlevo nahoře
+    { number: 12, x: 21, y: 56 },  // 12
+    { number: 13, x: 18, y: 48 },  // 13
+    { number: 14, x: 16, y: 40 },  // 14 - vlevo nahoře
   ];
 
   const getSpotData = (spotNumber: number) => {

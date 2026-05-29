@@ -10,31 +10,61 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, AlertCircle, CheckCircle2, Calendar, Banknote } from "lucide-react";
+import { Users, AlertCircle, CheckCircle2, Calendar, Banknote, AlertTriangle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
-import { createReservation } from "@/services/reservationService";
+import { createReservation, calculateReservationPrice } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRange } from "react-day-picker";
-import { calculateReservationPrice, formatPrice, getPricingPackageName } from "@/lib/pricing";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { getPricingPackageName, formatPrice } from "@/lib/pricing";
 
 interface ReservationFormProps {
   selectedSpots: number[];
+  selectedDates: Date[];
   dateRange: DateRange;
   fishermanCount: number;
   onSuccess?: () => void;
 }
 
-export function ReservationForm({ selectedSpots, dateRange, fishermanCount, onSuccess }: ReservationFormProps) {
+export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishermanCount, onSuccess }: ReservationFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showGapWarning, setShowGapWarning] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  // Detekce mezer v období (nesouvislé dny)
+  const detectDateGaps = () => {
+    if (selectedDates.length < 2) return { hasGaps: false, gapDays: [] };
+
+    const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+    const gaps: Date[] = [];
+    
+    for (let i = 0; i < sortedDates.length - 1; i++) {
+      const currentDate = sortedDates[i];
+      const nextDate = sortedDates[i + 1];
+      const dayDiff = Math.round((nextDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Pokud je rozdíl větší než 1 den, máme mezeru
+      if (dayDiff > 1) {
+        // Přidat všechny chybějící dny
+        for (let d = 1; d < dayDiff; d++) {
+          const gapDate = new Date(currentDate);
+          gapDate.setDate(currentDate.getDate() + d);
+          gaps.push(gapDate);
+        }
+      }
+    }
+    
+    return { hasGaps: gaps.length > 0, gapDays: gaps };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,17 +77,29 @@ export function ReservationForm({ selectedSpots, dateRange, fishermanCount, onSu
       return;
     }
 
+    // Kontrola mezer v datech
+    const { hasGaps } = detectDateGaps();
+    if (hasGaps && !pendingSubmit) {
+      setShowGapWarning(true);
+      return;
+    }
+
+    await processReservation();
+  };
+
+  const processReservation = async () => {
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setShowGapWarning(false);
 
     try {
-      const price = calculateReservationPrice(dateRange.from, dateRange.to, fishermanCount);
+      const price = calculateReservationPrice(dateRange.from!, dateRange.to!, fishermanCount);
       
       const result = await createReservation(
         selectedSpots,
         fishermanCount,
-        dateRange.from,
-        dateRange.to,
+        dateRange.from!,
+        dateRange.to!,
         { name, email, phone, notes },
         price
       );
@@ -73,6 +115,7 @@ export function ReservationForm({ selectedSpots, dateRange, fishermanCount, onSu
         setEmail("");
         setPhone("");
         setNotes("");
+        setPendingSubmit(false);
         
         setTimeout(() => {
           onSuccess?.();
@@ -85,10 +128,19 @@ export function ReservationForm({ selectedSpots, dateRange, fishermanCount, onSu
         type: "error",
         message: "Při vytváření rezervace došlo k chybě. Zkuste to prosím znovu.",
       });
+      setPendingSubmit(false);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleConfirmWithGaps = () => {
+    setPendingSubmit(true);
+    setShowGapWarning(false);
+    processReservation();
+  };
+
+  const { hasGaps, gapDays } = detectDateGaps();
 
   const getDayCount = () => {
     if (!dateRange.from || !dateRange.to) return 0;
@@ -110,144 +162,173 @@ export function ReservationForm({ selectedSpots, dateRange, fishermanCount, onSu
     : "";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          Dokončení rezervace
-        </CardTitle>
-        <CardDescription>
-          Vyplňte své kontaktní údaje
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Dokončení rezervace</CardTitle>
+          <CardDescription>
+            Vyplňte kontaktní údaje pro dokončení rezervace
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           {submitStatus && (
-            <Alert variant={submitStatus.type === "error" ? "destructive" : "default"}>
+            <Alert
+              variant={submitStatus.type === "success" ? "default" : "destructive"}
+              className="mb-6"
+            >
               {submitStatus.type === "success" ? (
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle className="h-4 w-4" />
               ) : (
-                <AlertCircle className="h-4 w-4" />
+                <AlertTriangle className="h-4 w-4" />
               )}
               <AlertDescription>{submitStatus.message}</AlertDescription>
             </Alert>
           )}
 
-          {/* Souhrn rezervace */}
-          <div className="bg-primary/10 border border-primary rounded-lg p-4 space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-primary" />
-              <span className="font-medium">
-                {dateRange.from && dateRange.to && (
-                  <>
-                    {format(dateRange.from, "d. MMM", { locale: cs })} - {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
-                    {" "}({getDayCount()} {getDayCount() === 1 ? "den" : getDayCount() < 5 ? "dny" : "dní"})
-                  </>
-                )}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="font-medium">{fishermanCount} {fishermanCount === 1 ? "rybář" : "rybáři"}</span>
-            </div>
-            <div className="text-sm">
-              <span className="font-medium">
-                {selectedSpots.length === 1 ? "Místo: " : "Místa: "}
-              </span>
-              <span className="text-primary font-bold">
-                {selectedSpots.map(s => `#${s}`).join(" + ")}
-              </span>
-            </div>
-          </div>
-
-          {/* Cena */}
-          {totalPrice > 0 && (
-            <div className="bg-accent/10 border-2 border-accent rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-full">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <Banknote className="h-4 w-4" />
-                    <span>{packageName}</span>
-                  </div>
-                  
-                  {fishermanCount > 1 && (
-                    <div className="text-sm text-muted-foreground mb-1">
-                      {formatPrice(basePrice)} × {fishermanCount} {fishermanCount === 1 ? "rybář" : fishermanCount < 5 ? "rybáři" : "rybářů"}
-                    </div>
-                  )}
-                  
-                  <div className="text-2xl font-bold text-accent">
-                    {formatPrice(totalPrice)}
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Cena bude potvrzena emailem nebo telefonicky
-              </p>
-            </div>
+          {hasGaps && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Upozornění:</strong> Vybrali jste dny s mezerami. Chybějící dny:{" "}
+                {gapDays.map((d) => format(d, "d. MMM", { locale: cs })).join(", ")}.
+                Pokud pokračujete, budou vytvořeny samostatné rezervace.
+              </AlertDescription>
+            </Alert>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Jméno a příjmení *</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Jan Novák"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Souhrn rezervace */}
+            <div className="bg-primary/10 border border-primary rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="font-medium">
+                  {dateRange.from && dateRange.to && (
+                    <>
+                      {format(dateRange.from, "d. MMM", { locale: cs })} - {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
+                      {" "}({selectedDates.length} {selectedDates.length === 1 ? "den" : selectedDates.length < 5 ? "dny" : "dní"})
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="font-medium">{fishermanCount} {fishermanCount === 1 ? "rybář" : "rybáři"}</span>
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">
+                  {selectedSpots.length === 1 ? "Místo: " : "Místa: "}
+                </span>
+                <span className="text-primary font-bold">
+                  {selectedSpots.map(s => `#${s}`).join(" + ")}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-primary/20 text-lg font-bold text-primary">
+                Celková cena: {formatPrice(calculateReservationPrice(dateRange.from!, dateRange.to!, fishermanCount))}
+              </div>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="jan.novak@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+            {/* Kontaktní formulář */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Jméno a příjmení *</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="Jan Novák"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefon *</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="+420 123 456 789"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="jan.novak@email.cz"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Poznámka (volitelné)</Label>
-            <Textarea
-              id="notes"
-              placeholder="Zde můžete uvést další informace..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefon *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  placeholder="+420 123 456 789"
+                />
+              </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Odesílám..." : "Odeslat rezervaci"}
-          </Button>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Poznámka (volitelné)</Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Další požadavky nebo poznámky..."
+                  rows={3}
+                />
+              </div>
+            </div>
 
-          <p className="text-xs text-muted-foreground text-center">
-            * Rezervace bude potvrzena po kontrole správcem
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Odesílám..." : "Dokončit rezervaci"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Dialog s upozorněním na mezery v datech */}
+      <AlertDialog open={showGapWarning} onOpenChange={setShowGapWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Upozornění na mezery v datech
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Vybrali jste dny s mezerami. Chybějící dny v období:
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="font-semibold text-amber-900">
+                  {gapDays.map((d) => format(d, "d. MMMM yyyy", { locale: cs })).join(", ")}
+                </p>
+              </div>
+              <p>
+                Pokud pokračujete, bude vytvořeno více samostatných rezervací pro každé souvislé období. 
+                Je to v pořádku?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingSubmit(false)}>
+              Zrušit a upravit dny
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmWithGaps} className="bg-primary">
+              Ano, pokračovat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
+}
+
+function formatPrice(price: number): string {
+  return new Intl.NumberFormat("cs-CZ", {
+    style: "currency",
+    currency: "CZK",
+    minimumFractionDigits: 0,
+  }).format(price);
 }

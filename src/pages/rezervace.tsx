@@ -304,6 +304,7 @@ export default function ReservationPage() {
             {showForm && selectedSpot.length > 0 && dateRange && (
               <ReservationForm
                 selectedSpots={selectedSpot}
+                selectedDates={selectedDates}
                 dateRange={dateRange}
                 fishermanCount={parseInt(fishermanCount)}
                 onSuccess={() => {
