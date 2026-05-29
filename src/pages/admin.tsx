@@ -78,7 +78,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (activeFilter === "all") {
-      setFilteredReservations(reservations);
+      setFilteredReservations(reservations.filter((reservation) => {
+        // "Vše" zobrazuje všechny KROMĚ stornovaných
+        return reservation.status !== "cancelled";
+      }));
     } else {
       setFilteredReservations(reservations.filter((r) => r.status === activeFilter));
     }
