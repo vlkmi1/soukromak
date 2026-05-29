@@ -125,14 +125,14 @@ export function checkAdjacentAvailability(
         spots: [selectedSpot],
         isOptimal: true,
         message: `Místo ${selectedSpot} je volné pro ${fishermanCount} ${fishermanCount === 1 ? "rybáře" : "rybáře"}`,
-        type: "perfect",
+        type: "single",
       };
     }
     return {
       spots: [selectedSpot],
       isOptimal: false,
       message: `Místo ${selectedSpot} nemá dostatečnou kapacitu (volné: ${spot.available}, potřeba: ${fishermanCount})`,
-      type: "manual_no_adjacent",
+      type: "separated",
     };
   }
 
@@ -144,7 +144,7 @@ export function checkAdjacentAvailability(
       spots: [selectedSpot],
       isOptimal: false,
       message: `Místo ${selectedSpot} nemá dostatečnou kapacitu (volné pozice: ${spot.available})`,
-      type: "manual_no_adjacent",
+      type: "separated",
     };
   }
 
@@ -169,14 +169,14 @@ export function checkAdjacentAvailability(
       spots: [selectedSpot, availableNeighbors[0]],
       isOptimal: spotsNeeded === 2,
       message,
-      type: "manual_with_adjacent",
+      type: "adjacent",
     };
   } else {
     return {
       spots: [selectedSpot],
       isOptimal: false,
       message: `Vybrali jste místo ${selectedSpot} (2 rybáři). Pro ${fishermanCount} rybářů bohužel nejsou dostupná sousední místa.`,
-      type: "manual_no_adjacent",
+      type: "separated",
     };
   }
 }
@@ -195,10 +195,11 @@ export function findAllPossibleCombinations(
   // Pro 1 rybáře - všechna volná místa
   if (fishermanCount === 1) {
     for (const spot of availability) {
-      if (spot.availablePositions >= 1) {
+      if (spot.available >= 1) {
         combinations.push({
           spots: [spot.spotNumber],
-          description: `Místo ${spot.spotNumber} (${spot.availablePositions} ${spot.availablePositions === 1 ? "pozice" : "pozice"})`,
+          description: `Místo ${spot.spotNumber} (${spot.available} ${spot.available === 1 ? "pozice" : "pozice"})`,
+          isOptimal: true,
         });
       }
     }
@@ -209,10 +210,11 @@ export function findAllPossibleCombinations(
   if (fishermanCount === 2) {
     // Plně volná jednotlivá místa
     for (const spot of availability) {
-      if (spot.availablePositions === 2) {
+      if (spot.available === 2) {
         combinations.push({
           spots: [spot.spotNumber],
           description: `Místo ${spot.spotNumber} (2 rybáři)`,
+          isOptimal: true,
         });
       }
     }
@@ -224,19 +226,20 @@ export function findAllPossibleCombinations(
 
       if (
         Math.abs(spot1.spotNumber - spot2.spotNumber) === 1 &&
-        spot1.availablePositions >= 1 &&
-        spot2.availablePositions >= 1
+        spot1.available >= 1 &&
+        spot2.available >= 1
       ) {
         combinations.push({
           spots: [spot1.spotNumber, spot2.spotNumber],
           description: `Místa ${spot1.spotNumber}+${spot2.spotNumber} (sousední)`,
+          isOptimal: true,
         });
       }
     }
 
     // Pokud nejsou žádné sousední kombinace, přidat nesousední
     if (combinations.length === 0) {
-      const availableSpots = availability.filter(s => s.availablePositions >= 1);
+      const availableSpots = availability.filter(s => s.available >= 1);
       for (let i = 0; i < availableSpots.length - 1; i++) {
         for (let j = i + 1; j < availableSpots.length; j++) {
           const spot1 = availableSpots[i];
@@ -245,6 +248,7 @@ export function findAllPossibleCombinations(
           combinations.push({
             spots: [spot1.spotNumber, spot2.spotNumber],
             description: `Místa ${spot1.spotNumber}+${spot2.spotNumber} (s odstupem)`,
+            isOptimal: false,
           });
         }
       }
@@ -262,7 +266,7 @@ export function findAllPossibleCombinations(
 
     for (let j = 0; j < requiredSpots; j++) {
       const spot = availability[i + j];
-      if (spot.availablePositions === 0) {
+      if (spot.available === 0) {
         allAdjacent = false;
         break;
       }
@@ -273,13 +277,14 @@ export function findAllPossibleCombinations(
       }
 
       spots.push(spot.spotNumber);
-      totalCapacity += spot.availablePositions;
+      totalCapacity += spot.available;
     }
 
     if (allAdjacent && totalCapacity >= fishermanCount) {
       combinations.push({
         spots,
         description: `${spots.length === 1 ? "Místo" : "Místa"} ${spots.join("+")} (${totalCapacity} pozic, souvislé)`,
+        isOptimal: true,
       });
     }
   }
@@ -287,8 +292,8 @@ export function findAllPossibleCombinations(
   // Pokud nejsou sousední kombinace, najít nesousední
   if (combinations.length === 0) {
     const availableSpots = availability
-      .filter((s) => s.availablePositions > 0)
-      .sort((a, b) => b.availablePositions - a.availablePositions);
+      .filter((s) => s.available > 0)
+      .sort((a, b) => b.available - a.available);
 
     // Vygenerovat možné kombinace míst
     const generateCombinations = (
@@ -304,7 +309,7 @@ export function findAllPossibleCombinations(
       for (let i = start; i < spots.length; i++) {
         const spot = spots[i];
         const newCurrent = [...current, spot.spotNumber];
-        const newNeeded = needed - spot.availablePositions;
+        const newNeeded = needed - spot.available;
 
         if (newNeeded <= 0) {
           results.push(newCurrent);
@@ -321,12 +326,13 @@ export function findAllPossibleCombinations(
     for (const combo of possibleCombinations.slice(0, 10)) {
       const totalCap = combo.reduce((sum, spotNum) => {
         const spot = availability.find(s => s.spotNumber === spotNum);
-        return sum + (spot?.availablePositions || 0);
+        return sum + (spot?.available || 0);
       }, 0);
 
       combinations.push({
         spots: combo.sort((a, b) => a - b),
         description: `Místa ${combo.sort((a, b) => a - b).join("+")} (${totalCap} pozic, s odstupem)`,
+        isOptimal: false,
       });
     }
   }
@@ -346,7 +352,7 @@ export function findBestSpotCombination(
   // Pro 1 rybáře - najít první volné místo
   if (fishermanCount === 1) {
     for (const spot of availability) {
-      if (spot.availablePositions >= 1) {
+      if (spot.available >= 1) {
         return {
           spots: [spot.spotNumber],
           isOptimal: true,
@@ -367,7 +373,7 @@ export function findBestSpotCombination(
   if (fishermanCount === 2) {
     // Nejdřív hledat jedno místo s 2 volnými pozicemi
     for (const spot of availability) {
-      if (spot.availablePositions === 2) {
+      if (spot.available === 2) {
         return {
           spots: [spot.spotNumber],
           isOptimal: true,
@@ -384,8 +390,8 @@ export function findBestSpotCombination(
 
       if (
         Math.abs(spot1.spotNumber - spot2.spotNumber) === 1 &&
-        spot1.availablePositions >= 1 &&
-        spot2.availablePositions >= 1
+        spot1.available >= 1 &&
+        spot2.available >= 1
       ) {
         return {
           spots: [spot1.spotNumber, spot2.spotNumber],
@@ -397,7 +403,7 @@ export function findBestSpotCombination(
     }
 
     // Pokud nejsou sousední, nabídnout libovolná 2 volná místa
-    const availableSpots = availability.filter(s => s.availablePositions >= 1);
+    const availableSpots = availability.filter(s => s.available >= 1);
     if (availableSpots.length >= 2) {
       return {
         spots: availableSpots.slice(0, 2).map(s => s.spotNumber),
@@ -426,7 +432,7 @@ export function findBestSpotCombination(
 
     for (let j = 0; j < requiredSpots; j++) {
       const spot = availability[i + j];
-      if (spot.availablePositions === 0) {
+      if (spot.available === 0) {
         allAdjacent = false;
         break;
       }
@@ -438,7 +444,7 @@ export function findBestSpotCombination(
       }
 
       spots.push(spot.spotNumber);
-      totalCapacity += spot.availablePositions;
+      totalCapacity += spot.available;
     }
 
     if (allAdjacent && totalCapacity >= fishermanCount) {
@@ -453,8 +459,8 @@ export function findBestSpotCombination(
 
   // Pokud nejsou sousední místa, najít libovolnou kombinaci
   const availableSpots = availability
-    .filter((s) => s.availablePositions > 0)
-    .sort((a, b) => b.availablePositions - a.availablePositions);
+    .filter((s) => s.available > 0)
+    .sort((a, b) => b.available - a.available);
 
   if (availableSpots.length > 0) {
     const spots: number[] = [];
@@ -463,7 +469,7 @@ export function findBestSpotCombination(
     for (const spot of availableSpots) {
       if (totalCapacity >= fishermanCount) break;
       spots.push(spot.spotNumber);
-      totalCapacity += spot.availablePositions;
+      totalCapacity += spot.available;
     }
 
     if (totalCapacity >= fishermanCount) {
