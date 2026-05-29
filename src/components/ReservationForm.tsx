@@ -13,11 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Users, AlertCircle, CheckCircle2, Calendar, Banknote, AlertTriangle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
-import { createReservation, calculateReservationPrice } from "@/services/reservationService";
+import { createReservation } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRange } from "react-day-picker";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getPricingPackageName, formatPrice } from "@/lib/pricing";
+import { getPricingPackageName, formatPrice, calculateReservationPrice } from "@/lib/pricing";
 
 interface ReservationFormProps {
   selectedSpots: number[];
@@ -323,12 +323,4 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
       </AlertDialog>
     </>
   );
-}
-
-function formatPrice(price: number): string {
-  return new Intl.NumberFormat("cs-CZ", {
-    style: "currency",
-    currency: "CZK",
-    minimumFractionDigits: 0,
-  }).format(price);
 }
