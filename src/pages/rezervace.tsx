@@ -25,11 +25,7 @@ import {
 } from "@/components/ui/popover";
 import { getSpotAvailability, findBestSpotCombination, type ReservationSuggestion } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
-}
+import { DateRange } from "react-day-picker";
 
 export default function ReservationPage() {
   const [dateRange, setDateRange] = useState<DateRange>({

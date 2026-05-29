@@ -2,11 +2,7 @@ import { useState, useEffect } from "react";
 import { MapPin, Users, Info, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSpotAvailability, type SpotAvailability } from "@/services/reservationService";
-
-interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
-}
+import { DateRange } from "react-day-picker";
 
 interface PondMapProps {
   dateRange: DateRange;

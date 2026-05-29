@@ -15,11 +15,7 @@ import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { createReservation } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
-}
+import { DateRange } from "react-day-picker";
 
 interface ReservationFormProps {
   selectedSpot: number;
