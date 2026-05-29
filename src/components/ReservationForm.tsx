@@ -19,13 +19,13 @@ import { DateRange } from "react-day-picker";
 import { calculateReservationPrice, formatPrice, getPricingPackageName } from "@/lib/pricing";
 
 interface ReservationFormProps {
-  selectedSpot: number;
+  selectedSpots: number[];
   dateRange: DateRange;
   fishermanCount: number;
   onSuccess?: () => void;
 }
 
-export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuccess }: ReservationFormProps) {
+export function ReservationForm({ selectedSpots, dateRange, fishermanCount, onSuccess }: ReservationFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,7 +54,7 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
       const price = calculateReservationPrice(dateRange.from, dateRange.to, fishermanCount);
       
       const result = await createReservation(
-        [selectedSpot],
+        selectedSpots,
         fishermanCount,
         dateRange.from,
         dateRange.to,
@@ -151,8 +151,12 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
               <span className="font-medium">{fishermanCount} {fishermanCount === 1 ? "rybář" : "rybáři"}</span>
             </div>
             <div className="text-sm">
-              <span className="font-medium">Místo: </span>
-              <span className="text-primary font-bold">#{selectedSpot}</span>
+              <span className="font-medium">
+                {selectedSpots.length === 1 ? "Místo: " : "Místa: "}
+              </span>
+              <span className="text-primary font-bold">
+                {selectedSpots.map(s => `#${s}`).join(" + ")}
+              </span>
             </div>
           </div>
 

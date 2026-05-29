@@ -41,14 +41,14 @@ export default function ReservationPage() {
     to: undefined,
   });
   const [fishermanCount, setFishermanCount] = useState("1");
-  const [selectedSpot, setSelectedSpot] = useState<number | null>(null);
+  const [selectedSpot, setSelectedSpot] = useState<number[]>([]);
   const [manuallySelected, setManuallySelected] = useState(false);
   const [suggestion, setSuggestion] = useState<ReservationSuggestion | null>(null);
   const [allCombinations, setAllCombinations] = useState<SpotCombination[]>([]);
   const [showForm, setShowForm] = useState(false);
 
   const handleSpotSelect = (spotNumber: number) => {
-    setSelectedSpot(spotNumber);
+    setSelectedSpot([spotNumber]);
     setManuallySelected(true);
     setShowForm(false);
     
@@ -80,12 +80,12 @@ export default function ReservationPage() {
     setManuallySelected(false);
     
     if (bestCombination && bestCombination.spots.length > 0) {
-      setSelectedSpot(bestCombination.spots[0]);
+      setSelectedSpot(bestCombination.spots);
     }
   };
 
   const handleCombinationSelect = (spots: number[]) => {
-    setSelectedSpot(spots[0]);
+    setSelectedSpot(spots);
     setSuggestion({
       spots: spots,
       isOptimal: true,
@@ -260,14 +260,14 @@ export default function ReservationPage() {
                 </CardContent>
               </Card>
 
-              {showForm && selectedSpot && dateRange.from && dateRange.to && (
+              {showForm && selectedSpot.length > 0 && dateRange.from && dateRange.to && (
                 <ReservationForm
-                  selectedSpot={selectedSpot}
+                  selectedSpots={selectedSpot}
                   dateRange={dateRange}
                   fishermanCount={parseInt(fishermanCount)}
                   onSuccess={() => {
                     setShowForm(false);
-                    setSelectedSpot(null);
+                    setSelectedSpot([]);
                     setManuallySelected(false);
                     handleAutomaticSearch();
                   }}
