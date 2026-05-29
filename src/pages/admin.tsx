@@ -210,7 +210,7 @@ export default function AdminPage() {
             <CardContent>
               <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as typeof activeFilter)}>
                 <TabsList className="mb-6">
-                  <TabsTrigger value="all">Vše ({stats.total})</TabsTrigger>
+                  <TabsTrigger value="all">Vše ({stats.total - stats.cancelled})</TabsTrigger>
                   <TabsTrigger value="new">Nové ({stats.new})</TabsTrigger>
                   <TabsTrigger value="confirmed">Potvrzené ({stats.confirmed})</TabsTrigger>
                   <TabsTrigger value="paid">Zaplacené ({stats.paid})</TabsTrigger>
