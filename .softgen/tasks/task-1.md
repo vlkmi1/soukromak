@@ -13,10 +13,10 @@ position: 1
 Vytvoření databázového schématu pro rezervační systém rybníku. Tabulky pro lovná místa, pozice, rezervace a jejich stavy.
 
 ## Checklist
-- [ ] Vytvořit SQL migrace pro tabulky (fishing_spots, spot_positions, reservations)
-- [ ] Nastavit Row Level Security policies
-- [ ] Vytvořit Supabase client utility v lib/supabase.ts
-- [ ] Vytvořit TypeScript typy pro databázové entity
+- [x] Vytvořit SQL migrace pro tabulky (fishing_spots, spot_positions, reservations)
+- [x] Nastavit Row Level Security policies
+- [x] Vytvořit Supabase client utility v lib/supabase.ts
+- [x] Vytvořit TypeScript typy pro databázové entity
 
 ## Acceptance
 - Databázové schéma je plně funkční
