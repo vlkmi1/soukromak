@@ -18,9 +18,16 @@ import {
   type ReservationSuggestion,
   type SpotCombination,
 } from "@/services/reservationService";
+import { supabase } from "@/lib/supabase";
 import { Calendar as CalendarIcon, Users, Info, CheckCircle2, MapPin } from "lucide-react";
 import { cs } from "date-fns/locale";
-import { format, startOfDay, endOfDay } from "date-fns";
+import { format, startOfDay, endOfDay, isSameDay } from "date-fns";
+
+interface DayAvailability {
+  date: Date;
+  availableSpots: number;
+  totalSpots: number;
+}
 
 export default function ReservationPage() {
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -30,6 +37,85 @@ export default function ReservationPage() {
   const [suggestion, setSuggestion] = useState<ReservationSuggestion | null>(null);
   const [allCombinations, setAllCombinations] = useState<SpotCombination[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [dayAvailabilities, setDayAvailabilities] = useState<DayAvailability[]>([]);
+
+  // Načíst dostupnost pro všechny nadcházející dny (30 dní dopředu)
+  useEffect(() => {
+    loadDayAvailabilities();
+  }, []);
+
+  const loadDayAvailabilities = async () => {
+    const today = startOfDay(new Date());
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 60); // 60 dní dopředu
+
+    try {
+      const { data: reservations, error } = await supabase
+        .from("reservations")
+        .select("spot_id, position_id, start_date, end_date, status")
+        .gte("end_date", today.toISOString())
+        .lte("start_date", endDate.toISOString())
+        .in("status", ["new", "confirmed", "paid"]);
+
+      if (error) throw error;
+
+      // Vypočítat dostupnost pro každý den
+      const availabilities: DayAvailability[] = [];
+      const totalSpotsPerDay = 14; // 14 lovných míst
+
+      for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const currentDay = new Date(d);
+        
+        // Spočítat obsazená místa v tento den
+        const occupiedPositions = new Set<string>();
+        reservations?.forEach((res) => {
+          const resStart = startOfDay(new Date(res.start_date));
+          const resEnd = startOfDay(new Date(res.end_date));
+          
+          if (currentDay >= resStart && currentDay <= resEnd) {
+            occupiedPositions.add(`${res.spot_id}-${res.position_id}`);
+          }
+        });
+
+        const occupiedCount = occupiedPositions.size;
+        const availableCount = (totalSpotsPerDay * 2) - occupiedCount; // 2 pozice na místo
+
+        availabilities.push({
+          date: new Date(currentDay),
+          availableSpots: availableCount,
+          totalSpots: totalSpotsPerDay * 2,
+        });
+      }
+
+      setDayAvailabilities(availabilities);
+    } catch (error) {
+      console.error("Error loading day availabilities:", error);
+    }
+  };
+
+  const getDayAvailability = (date: Date) => {
+    return dayAvailabilities.find((av) => isSameDay(av.date, date));
+  };
+
+  const getAvailabilityModifiers = () => {
+    const fullyAvailable: Date[] = [];
+    const partiallyAvailable: Date[] = [];
+    const fullyBooked: Date[] = [];
+
+    dayAvailabilities.forEach((av) => {
+      if (av.availableSpots === av.totalSpots) {
+        fullyAvailable.push(av.date);
+      } else if (av.availableSpots > 0) {
+        partiallyAvailable.push(av.date);
+      } else {
+        fullyBooked.push(av.date);
+      }
+    });
+
+    return { fullyAvailable, partiallyAvailable, fullyBooked };
+  };
+
+  const { fullyAvailable, partiallyAvailable, fullyBooked } = getAvailabilityModifiers();
 
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
@@ -170,6 +256,9 @@ export default function ReservationPage() {
                   className="rounded-md border"
                   modifiers={{
                     selected: selectedDates,
+                    fullyAvailable: fullyAvailable,
+                    partiallyAvailable: partiallyAvailable,
+                    fullyBooked: fullyBooked,
                   }}
                   modifiersStyles={{
                     selected: {
@@ -177,8 +266,42 @@ export default function ReservationPage() {
                       color: "white",
                       fontWeight: "bold",
                     },
+                    fullyAvailable: {
+                      backgroundColor: "hsl(142 76% 85%)",
+                      color: "hsl(142 76% 20%)",
+                    },
+                    partiallyAvailable: {
+                      backgroundColor: "hsl(38 92% 85%)",
+                      color: "hsl(38 92% 25%)",
+                    },
+                    fullyBooked: {
+                      backgroundColor: "hsl(0 84% 85%)",
+                      color: "hsl(0 84% 30%)",
+                      textDecoration: "line-through",
+                    },
                   }}
                 />
+                
+                {/* Legenda barev */}
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
+                  <div className="text-xs font-semibold text-muted-foreground mb-2">Dostupnost:</div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(142 76% 85%)" }}></div>
+                    <span>Všechna místa volná</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(38 92% 85%)" }}></div>
+                    <span>Částečně obsazeno</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(0 84% 85%)" }}></div>
+                    <span>Plně obsazeno</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-4 h-4 rounded bg-primary"></div>
+                    <span>Vybrané dny</span>
+                  </div>
+                </div>
                 
                 {selectedDates.length > 0 && (
                   <div className="mt-4 p-3 bg-primary/10 border border-primary rounded-lg">

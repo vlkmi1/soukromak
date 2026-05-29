@@ -13,20 +13,20 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
   // Přesné pozice podle mapy - 14 míst číslovaných zprava doleva
   // Upraveno: místa blíž ke břehu, na vodě
   const spotPositions = [
-    { number: 1, x: 82, y: 42 },   // 1 - vpravo nahoře (blíž k vodě)
-    { number: 2, x: 79, y: 48 },   // 2 (blíž k vodě)
-    { number: 3, x: 75, y: 54 },   // 3
-    { number: 4, x: 70, y: 59 },   // 4
-    { number: 5, x: 64, y: 64 },   // 5
-    { number: 6, x: 57, y: 68 },   // 6
-    { number: 7, x: 52, y: 66 },   // 7 - nahoru a doprava
-    { number: 8, x: 46, y: 67 },   // 8 - nahoru a doprava
-    { number: 9, x: 40, y: 66 },   // 9 - nahoru a doprava
-    { number: 10, x: 34, y: 63 },  // 10 - nahoru a doprava
-    { number: 11, x: 29, y: 58 },  // 11 - nahoru a doprava
-    { number: 12, x: 25, y: 52 },  // 12 - nahoru a doprava
-    { number: 13, x: 22, y: 45 },  // 13 - nahoru a doprava
-    { number: 14, x: 16, y: 40 },  // 14 - vlevo nahoře
+    { number: 1, x: 82, y: 42 },   // 1 - vpravo nahoře
+    { number: 2, x: 79, y: 48 },   // 2
+    { number: 3, x: 75, y: 54 },   // 3 - dobře
+    { number: 4, x: 71, y: 60 },   // 4 - trochu doprava
+    { number: 5, x: 67, y: 65 },   // 5 - výrazně doprava
+    { number: 6, x: 62, y: 69 },   // 6 - výrazně doprava
+    { number: 7, x: 57, y: 71 },   // 7 - výrazně doprava
+    { number: 8, x: 52, y: 72 },   // 8 - výrazně doprava
+    { number: 9, x: 47, y: 71 },   // 9 - výrazně doprava
+    { number: 10, x: 42, y: 69 },  // 10 - výrazně doprava
+    { number: 11, x: 37, y: 65 },  // 11 - trochu doprava
+    { number: 12, x: 33, y: 60 },  // 12 - trochu doprava
+    { number: 13, x: 29, y: 54 },  // 13 - trochu doprava
+    { number: 14, x: 25, y: 47 },  // 14 - vlevo nahoře
   ];
 
   const getSpotData = (spotNumber: number) => {
