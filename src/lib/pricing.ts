@@ -3,14 +3,24 @@ import { differenceInHours, getDay } from "date-fns";
 /**
  * Vypočítá cenu rezervace podle ceníku
  * 
- * Ceník:
+ * Ceník (ceny za 1 rybáře):
  * - S rezervací 24h (PO-ČT do 12:00h): 500 Kč
  * - Bez rezervace na místě 24h (ČT - NE do 12:00h): 600 Kč
  * - Malá víkendová 48h (PÁ 12:00h do NE 12:00h): 1100 Kč
  * - Velká víkendová 72h (ČT 12:00h do NE 12:00h): 1500 Kč
  * - Týdenní (168 hodin): 2500 Kč
+ * 
+ * Celková cena = základní cena × počet rybářů
  */
-export function calculateReservationPrice(startDate: Date, endDate: Date): number {
+export function calculateReservationPrice(startDate: Date, endDate: Date, fishermanCount: number = 1): number {
+  const basePrice = getBasePricePerFisherman(startDate, endDate);
+  return basePrice * fishermanCount;
+}
+
+/**
+ * Vypočítá základní cenu za jednoho rybáře podle období
+ */
+export function getBasePricePerFisherman(startDate: Date, endDate: Date): number {
   const hours = differenceInHours(endDate, startDate);
   const startDay = getDay(startDate); // 0 = neděle, 1 = pondělí, ..., 6 = sobota
   

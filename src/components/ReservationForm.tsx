@@ -51,7 +51,7 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
     setSubmitStatus(null);
 
     try {
-      const price = calculateReservationPrice(dateRange.from, dateRange.to);
+      const price = calculateReservationPrice(dateRange.from, dateRange.to, fishermanCount);
       
       const result = await createReservation(
         [selectedSpot],
@@ -97,8 +97,12 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
     return diffDays;
   };
 
+  const basePrice = dateRange.from && dateRange.to 
+    ? calculateReservationPrice(dateRange.from, dateRange.to, 1)
+    : 0;
+
   const totalPrice = dateRange.from && dateRange.to 
-    ? calculateReservationPrice(dateRange.from, dateRange.to)
+    ? calculateReservationPrice(dateRange.from, dateRange.to, fishermanCount)
     : 0;
 
   const packageName = dateRange.from && dateRange.to
@@ -156,11 +160,18 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
           {totalPrice > 0 && (
             <div className="bg-accent/10 border-2 border-accent rounded-lg p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <div className="w-full">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                     <Banknote className="h-4 w-4" />
                     <span>{packageName}</span>
                   </div>
+                  
+                  {fishermanCount > 1 && (
+                    <div className="text-sm text-muted-foreground mb-1">
+                      {formatPrice(basePrice)} × {fishermanCount} {fishermanCount === 1 ? "rybář" : fishermanCount < 5 ? "rybáři" : "rybářů"}
+                    </div>
+                  )}
+                  
                   <div className="text-2xl font-bold text-accent">
                     {formatPrice(totalPrice)}
                   </div>
