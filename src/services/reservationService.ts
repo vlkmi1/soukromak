@@ -1,9 +1,11 @@
 import { supabase } from "@/lib/supabase";
+import { startOfDay } from "date-fns";
 
 export interface SpotAvailability {
   spotNumber: number;
   available: number;
   total: number;
+  occupied: number;
   x: number;
   y: number;
 }
@@ -84,7 +86,10 @@ export async function getSpotAvailability(
       availability.push({
         spotNumber: spotNum,
         available: availablePositions,
+        total: 2,
         occupied: occupiedPositions.size,
+        x: 0,
+        y: 0,
       });
     }
 
