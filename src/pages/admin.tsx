@@ -12,20 +12,26 @@ import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { formatPrice } from "@/lib/pricing";
 
 type ReservationStatus = "new" | "confirmed" | "paid" | "cancelled";
 
 interface Reservation {
   id: number;
-  fishing_spot_id: number;
-  reservation_date: string;
-  number_of_anglers: number;
+  spot_id: number;
+  position_id: number;
+  start_date: string;
+  end_date: string;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
   notes: string | null;
   status: ReservationStatus;
+  price: number | null;
   created_at: string;
+  fishing_spots?: {
+    number: number;
+  };
 }
 
 const STATUS_CONFIG = {
@@ -47,8 +53,8 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase
         .from("reservations")
-        .select("*")
-        .order("reservation_date", { ascending: true })
+        .select("*, fishing_spots(number)")
+        .order("start_date", { ascending: true })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -221,11 +227,11 @@ export default function AdminPage() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>ID</TableHead>
-                            <TableHead>Datum</TableHead>
+                            <TableHead>Období</TableHead>
                             <TableHead>Místo</TableHead>
                             <TableHead>Zákazník</TableHead>
                             <TableHead>Kontakt</TableHead>
-                            <TableHead>Rybáři</TableHead>
+                            <TableHead>Cena</TableHead>
                             <TableHead>Stav</TableHead>
                             <TableHead>Akce</TableHead>
                           </TableRow>
@@ -233,6 +239,8 @@ export default function AdminPage() {
                         <TableBody>
                           {filteredReservations.map((reservation) => {
                             const StatusIcon = STATUS_CONFIG[reservation.status].icon;
+                            const spotNumber = reservation.fishing_spots?.number || reservation.spot_id;
+                            
                             return (
                               <TableRow key={reservation.id}>
                                 <TableCell className="font-mono text-sm">
@@ -241,13 +249,15 @@ export default function AdminPage() {
                                 <TableCell>
                                   <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    {format(new Date(reservation.reservation_date), "d. MMM yyyy", {
-                                      locale: cs,
-                                    })}
+                                    <div className="text-sm">
+                                      <div>
+                                        {format(new Date(reservation.start_date), "d. MMM", { locale: cs })} - {format(new Date(reservation.end_date), "d. MMM yyyy", { locale: cs })}
+                                      </div>
+                                    </div>
                                   </div>
                                 </TableCell>
                                 <TableCell className="font-medium">
-                                  Místo {reservation.fishing_spot_id}
+                                  Místo #{spotNumber}
                                 </TableCell>
                                 <TableCell>
                                   <div>
@@ -268,10 +278,11 @@ export default function AdminPage() {
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-muted-foreground" />
-                                    {reservation.number_of_anglers}
-                                  </div>
+                                  {reservation.price ? (
+                                    <div className="font-medium">{formatPrice(reservation.price)}</div>
+                                  ) : (
+                                    <span className="text-muted-foreground text-sm">—</span>
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <Badge
