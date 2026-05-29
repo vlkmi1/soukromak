@@ -287,7 +287,7 @@ export default function ReservationPage() {
                   <div className="text-xs font-semibold text-muted-foreground mb-2">Dostupnost:</div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(142 76% 85%)" }}></div>
-                    <span>Všechna místa volná</span>
+                    <span>Dostatek volných míst</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(38 92% 85%)" }}></div>
