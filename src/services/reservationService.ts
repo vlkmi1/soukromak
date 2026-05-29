@@ -52,7 +52,12 @@ export async function getSpotAvailability(
       .from("fishing_spots")
       .select("*, spot_positions(*)");
 
-    if (spotsError) throw spotsError;
+    if (spotsError) {
+      console.error("Error fetching spots:", spotsError);
+      throw spotsError;
+    }
+
+    console.log("Loaded spots from database:", spots);
 
     // Získat všechny rezervace v daném období
     const { data: reservations, error: resError } = await supabase
@@ -61,10 +66,15 @@ export async function getSpotAvailability(
       .neq("status", "cancelled")
       .or(`start_date.lte.${endDate.toISOString()},end_date.gte.${startDate.toISOString()}`);
 
-    if (resError) throw resError;
+    if (resError) {
+      console.error("Error fetching reservations:", resError);
+      throw resError;
+    }
+
+    console.log("Loaded reservations:", reservations);
 
     // Spočítat dostupnost pro každé místo
-    const availability: SpotAvailability[] = spots?.map((spot) => {
+    const availability: SpotAvailability[] = spots?.map((spot: any) => {
       const positions = spot.spot_positions || [];
       const totalPositions = positions.length;
 
@@ -79,13 +89,15 @@ export async function getSpotAvailability(
       ).size;
 
       return {
-        spotNumber: spot.number,
+        spotNumber: spot.number || spot.id, // fallback na id pokud number neexistuje
         available: totalPositions - occupiedPositions,
         total: totalPositions,
-        x: spot.x_position || 0,
-        y: spot.y_position || 0,
+        x: parseFloat(spot.x_position || spot.position_x || 0),
+        y: parseFloat(spot.y_position || spot.position_y || 0),
       };
     }) || [];
+
+    console.log("Calculated availability:", availability);
 
     return availability;
   } catch (error) {
