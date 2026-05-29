@@ -16,21 +16,21 @@ export function PondMap({ dateRange, fishermanCount, onSpotSelect, suggestedSpot
   const [hoveredSpot, setHoveredSpot] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Přesné pozice podle skutečné mapy rybníku (percentage based on image)
+  // Přesné pozice podle skutečné mapy - lovná místa podél jednoho břehu (zleva doprava)
   const spotPositions = [
-    { number: 1, x: 12, y: 35 },
-    { number: 2, x: 26, y: 17 },
-    { number: 3, x: 41, y: 12 },
-    { number: 4, x: 56, y: 14 },
-    { number: 5, x: 69, y: 21 },
-    { number: 6, x: 77, y: 36 },
-    { number: 7, x: 79, y: 55 },
-    { number: 8, x: 72, y: 74 },
-    { number: 9, x: 57, y: 86 },
-    { number: 10, x: 42, y: 90 },
-    { number: 11, x: 28, y: 87 },
-    { number: 12, x: 15, y: 77 },
-    { number: 13, x: 9, y: 55 },
+    { number: 1, x: 11, y: 35 },   // Levý horní roh
+    { number: 2, x: 23, y: 30 },   
+    { number: 3, x: 25, y: 35 },   
+    { number: 4, x: 28, y: 42 },   
+    { number: 5, x: 32, y: 50 },   
+    { number: 6, x: 38, y: 60 },   
+    { number: 7, x: 45, y: 67 },   
+    { number: 8, x: 52, y: 72 },   // Spodní střed
+    { number: 9, x: 60, y: 73 },   
+    { number: 10, x: 68, y: 68 },  
+    { number: 11, x: 74, y: 60 },  
+    { number: 12, x: 78, y: 48 },  
+    { number: 13, x: 79, y: 38 },  // Pravý horní
   ];
 
   useEffect(() => {
