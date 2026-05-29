@@ -5,13 +5,14 @@ import { getSpotAvailability, type SpotAvailability } from "@/services/reservati
 import { DateRange } from "react-day-picker";
 
 interface PondMapProps {
-  dateRange: DateRange;
-  fishermanCount: number;
+  selectedSpots: number[];
   onSpotSelect: (spotNumber: number) => void;
-  suggestedSpots?: number[];
+  availability: SpotAvailability[];
 }
 
-export function PondMap({ dateRange, fishermanCount, onSpotSelect, suggestedSpots = [] }: PondMapProps) {
+export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapProps) {
+  const isSpotSelected = (spotNumber: number) => selectedSpots.includes(spotNumber);
+
   const [spotsData, setSpotsData] = useState<SpotAvailability[]>([]);
   const [hoveredSpot, setHoveredSpot] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,63 +107,17 @@ export function PondMap({ dateRange, fishermanCount, onSpotSelect, suggestedSpot
           
           {/* Overlay s lovnými místy */}
           <div className="absolute inset-0">
-            {spotsData.map((spot) => {
-              const isHovered = hoveredSpot === spot.spotNumber;
-              const canSelect = spot.available > 0;
-              const isSuggested = suggestedSpots.includes(spot.spotNumber);
-              
-              return (
-                <button
-                  key={spot.spotNumber}
-                  onClick={() => canSelect && onSpotSelect(spot.spotNumber)}
-                  onMouseEnter={() => setHoveredSpot(spot.spotNumber)}
-                  onMouseLeave={() => setHoveredSpot(null)}
-                  disabled={!canSelect}
-                  className="absolute group"
-                  style={{
-                    left: `${spot.x}%`,
-                    top: `${spot.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                >
-                  {/* Kruh s číslem místa */}
-                  <div
-                    className={`
-                      w-12 h-12 rounded-full border-4 flex items-center justify-center
-                      font-bold text-white text-lg shadow-lg
-                      transition-all duration-200
-                      ${getSpotColor(spot.available, spot.total, spot.spotNumber)}
-                      ${canSelect ? 'cursor-pointer hover:scale-125' : 'cursor-not-allowed opacity-75'}
-                      ${isHovered ? 'scale-125 ring-4 ring-white/50' : 'scale-100'}
-                      ${isSuggested ? 'animate-pulse' : ''}
-                    `}
-                  >
-                    {spot.spotNumber}
-                  </div>
-
-                  {/* Tooltip při hoveru */}
-                  {isHovered && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-10">
-                      <div className="bg-white border-2 border-primary rounded-lg shadow-xl p-3 min-w-[140px]">
-                        <div className="text-sm font-semibold text-foreground mb-1">
-                          Místo {spot.spotNumber}
-                          {isSuggested && (
-                            <span className="ml-2 text-xs text-accent">★ Doporučeno</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {getSpotStatus(spot.available, spot.total)}
-                        </div>
-                        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          {spot.available}/{spot.total} pozic
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+            <circle
+                key={spot.number}
+                cx={spot.x}
+                cy={spot.y}
+                r="20"
+                fill={isSpotSelected(spot.number) ? "hsl(var(--primary))" : "hsl(var(--accent))"}
+                stroke="white"
+                strokeWidth="2"
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => onSpotSelect(spot.number)}
+              />
           </div>
         </div>
 
