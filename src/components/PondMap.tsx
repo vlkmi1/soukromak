@@ -20,19 +20,19 @@ interface PondMapProps {
 }
 
 const FISHING_SPOTS: FishingSpot[] = [
-  { id: 1, name: "Místo 1", x: 15, y: 20, availablePositions: 2, totalPositions: 2 },
-  { id: 2, name: "Místo 2", x: 30, y: 25, availablePositions: 1, totalPositions: 2 },
-  { id: 3, name: "Místo 3", x: 45, y: 22, availablePositions: 2, totalPositions: 2 },
-  { id: 4, name: "Místo 4", x: 60, y: 28, availablePositions: 0, totalPositions: 2 },
-  { id: 5, name: "Místo 5", x: 75, y: 25, availablePositions: 2, totalPositions: 2 },
-  { id: 6, name: "Místo 6", x: 85, y: 35, availablePositions: 1, totalPositions: 2 },
-  { id: 7, name: "Místo 7", x: 82, y: 50, availablePositions: 2, totalPositions: 2 },
-  { id: 8, name: "Místo 8", x: 70, y: 60, availablePositions: 2, totalPositions: 2 },
-  { id: 9, name: "Místo 9", x: 55, y: 65, availablePositions: 1, totalPositions: 2 },
-  { id: 10, name: "Místo 10", x: 40, y: 62, availablePositions: 2, totalPositions: 2 },
-  { id: 11, name: "Místo 11", x: 25, y: 58, availablePositions: 0, totalPositions: 2 },
-  { id: 12, name: "Místo 12", x: 15, y: 45, availablePositions: 2, totalPositions: 2 },
-  { id: 13, name: "Místo 13", x: 10, y: 35, availablePositions: 2, totalPositions: 2 },
+  { id: 1, name: "Místo 1", x: 28, y: 15, availablePositions: 2, totalPositions: 2 },
+  { id: 2, name: "Místo 2", x: 38, y: 12, availablePositions: 1, totalPositions: 2 },
+  { id: 3, name: "Místo 3", x: 48, y: 10, availablePositions: 2, totalPositions: 2 },
+  { id: 4, name: "Místo 4", x: 58, y: 11, availablePositions: 0, totalPositions: 2 },
+  { id: 5, name: "Místo 5", x: 68, y: 14, availablePositions: 2, totalPositions: 2 },
+  { id: 6, name: "Místo 6", x: 76, y: 20, availablePositions: 1, totalPositions: 2 },
+  { id: 7, name: "Místo 7", x: 82, y: 32, availablePositions: 2, totalPositions: 2 },
+  { id: 8, name: "Místo 8", x: 80, y: 48, availablePositions: 2, totalPositions: 2 },
+  { id: 9, name: "Místo 9", x: 70, y: 62, availablePositions: 1, totalPositions: 2 },
+  { id: 10, name: "Místo 10", x: 55, y: 68, availablePositions: 2, totalPositions: 2 },
+  { id: 11, name: "Místo 11", x: 40, y: 70, availablePositions: 0, totalPositions: 2 },
+  { id: 12, name: "Místo 12", x: 25, y: 65, availablePositions: 2, totalPositions: 2 },
+  { id: 13, name: "Místo 13", x: 15, y: 45, availablePositions: 2, totalPositions: 2 },
 ];
 
 const areAdjacent = (spot1: number, spot2: number): boolean => {
@@ -164,23 +164,23 @@ export function PondMap({ onSpotSelect, selectedSpotId, numberOfAnglers = 1 }: P
           </Alert>
         )}
 
-        <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/10 rounded-lg overflow-hidden">
+        <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/10 rounded-lg overflow-hidden border-2 border-border">
           <div 
-            className="absolute inset-0 opacity-20 bg-cover bg-center"
-            style={{ backgroundImage: "url('/generated/pond-aerial.png')" }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ 
+              backgroundImage: "url('/pond-map.jpg')",
+              opacity: 0.3
+            }}
           />
           
           <svg
             viewBox="0 0 100 80"
-            className="w-full h-full"
+            className="w-full h-full relative z-10"
             style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
           >
-            <ellipse
-              cx="50"
-              cy="40"
-              rx="45"
-              ry="35"
-              className="fill-accent/20 stroke-accent/40"
+            <path
+              d="M 10,30 Q 15,15 30,12 T 50,10 T 70,14 Q 85,18 88,35 T 82,55 Q 75,70 55,72 T 30,68 Q 12,60 10,45 Z"
+              className="fill-accent/15 stroke-accent/30"
               strokeWidth="0.5"
             />
 
@@ -189,9 +189,9 @@ export function PondMap({ onSpotSelect, selectedSpotId, numberOfAnglers = 1 }: P
                 <circle
                   cx={spot.x}
                   cy={spot.y}
-                  r={hoveredSpot === spot.id || selectedSpotId === spot.id ? 3.5 : 3}
+                  r={hoveredSpot === spot.id || selectedSpotId === spot.id ? 4 : 3.2}
                   className={`${getSpotColor(spot)} stroke-white cursor-pointer transition-all duration-200`}
-                  strokeWidth={selectedSpotId === spot.id ? "1" : "0.5"}
+                  strokeWidth={selectedSpotId === spot.id ? "1.2" : "0.8"}
                   onMouseEnter={() => setHoveredSpot(spot.id)}
                   onMouseLeave={() => setHoveredSpot(null)}
                   onClick={() => handleSpotClick(spot)}
@@ -199,9 +199,9 @@ export function PondMap({ onSpotSelect, selectedSpotId, numberOfAnglers = 1 }: P
                 
                 <text
                   x={spot.x}
-                  y={spot.y - 5}
+                  y={spot.y + 1.2}
                   textAnchor="middle"
-                  className="fill-foreground text-[3px] font-bold pointer-events-none"
+                  className="fill-white text-[3.5px] font-bold pointer-events-none"
                   style={{ userSelect: "none" }}
                 >
                   {spot.id}
@@ -210,19 +210,20 @@ export function PondMap({ onSpotSelect, selectedSpotId, numberOfAnglers = 1 }: P
                 {hoveredSpot === spot.id && (
                   <g>
                     <rect
-                      x={spot.x - 12}
-                      y={spot.y + 4}
-                      width="24"
-                      height="8"
-                      rx="1"
-                      className="fill-white/95 stroke-border"
-                      strokeWidth="0.3"
+                      x={spot.x - 14}
+                      y={spot.y + 5}
+                      width="28"
+                      height="9"
+                      rx="1.5"
+                      className="fill-white/98 stroke-border"
+                      strokeWidth="0.4"
+                      style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.2))" }}
                     />
                     <text
                       x={spot.x}
-                      y={spot.y + 9}
+                      y={spot.y + 10.5}
                       textAnchor="middle"
-                      className="fill-foreground text-[2.5px] font-medium pointer-events-none"
+                      className="fill-foreground text-[3px] font-semibold pointer-events-none"
                     >
                       {spot.name} - {getSpotStatus(spot)}
                     </text>
@@ -235,15 +236,15 @@ export function PondMap({ onSpotSelect, selectedSpotId, numberOfAnglers = 1 }: P
 
         <div className="flex items-center gap-6 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-primary/60" />
+            <div className="w-4 h-4 rounded-full bg-primary/60 border-2 border-white" />
             <span className="text-sm">Volné (2 pozice)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-accent/60" />
+            <div className="w-4 h-4 rounded-full bg-accent/60 border-2 border-white" />
             <span className="text-sm">Částečně obsazeno (1 pozice)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-destructive/80" />
+            <div className="w-4 h-4 rounded-full bg-destructive/80 border-2 border-white" />
             <span className="text-sm">Obsazeno</span>
           </div>
         </div>
