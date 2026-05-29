@@ -33,6 +33,7 @@ import {
 } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRange } from "react-day-picker";
+import { Input } from "@/components/ui/input";
 
 export default function ReservationPage() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -183,22 +184,27 @@ export default function ReservationPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="fisherman-count">Počet rybářů</Label>
-                    <Select 
-                      value={fishermanCount} 
-                      onValueChange={(val) => {
+                    <Input
+                      id="fisherman-count"
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={fishermanCount}
+                      onChange={(e) => {
+                        const val = e.target.value;
                         setFishermanCount(val);
                         setManuallySelected(false);
                       }}
-                    >
-                      <SelectTrigger id="fisherman-count">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 rybář</SelectItem>
-                        <SelectItem value="2">2 rybáři</SelectItem>
-                        <SelectItem value="3">3 rybáři</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      placeholder="Zadejte počet rybářů"
+                    />
+                    {parseInt(fishermanCount) > 20 && (
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-sm">
+                          Pro více než 20 rybářů doporučujeme kontaktovat nás přímo pro soukromou akci na rybníku.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
 
                   {suggestion && (
