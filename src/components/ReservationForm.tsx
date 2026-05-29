@@ -10,23 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon, Users, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Users, AlertCircle, CheckCircle2, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { createReservation } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -36,16 +22,13 @@ interface DateRange {
 }
 
 interface ReservationFormProps {
-  selectedSpot?: number;
+  selectedSpot: number;
+  dateRange: DateRange;
+  fishermanCount: number;
   onSuccess?: () => void;
 }
 
-export function ReservationForm({ selectedSpot, onSuccess }: ReservationFormProps) {
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined,
-  });
-  const [fishermanCount, setFishermanCount] = useState("1");
+export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuccess }: ReservationFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -67,21 +50,13 @@ export function ReservationForm({ selectedSpot, onSuccess }: ReservationFormProp
       return;
     }
 
-    if (!selectedSpot) {
-      setSubmitStatus({
-        type: "error",
-        message: "Vyberte prosím lovné místo na mapě",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     try {
       const result = await createReservation(
         [selectedSpot],
-        parseInt(fishermanCount),
+        fishermanCount,
         dateRange.from,
         dateRange.to,
         { name, email, phone, notes }
@@ -94,14 +69,14 @@ export function ReservationForm({ selectedSpot, onSuccess }: ReservationFormProp
         });
         
         // Reset formuláře
-        setDateRange({ from: undefined, to: undefined });
-        setFishermanCount("1");
         setName("");
         setEmail("");
         setPhone("");
         setNotes("");
         
-        onSuccess?.();
+        setTimeout(() => {
+          onSuccess?.();
+        }, 2000);
       } else {
         throw new Error("Nepodařilo se vytvořit rezervaci");
       }
@@ -127,14 +102,14 @@ export function ReservationForm({ selectedSpot, onSuccess }: ReservationFormProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          Rezervační formulář
+          Dokončení rezervace
         </CardTitle>
         <CardDescription>
-          Vyplňte své údaje a odešlete rezervaci
+          Vyplňte své kontaktní údaje
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {submitStatus && (
             <Alert variant={submitStatus.type === "error" ? "destructive" : "default"}>
               {submitStatus.type === "success" ? (
@@ -146,76 +121,27 @@ export function ReservationForm({ selectedSpot, onSuccess }: ReservationFormProp
             </Alert>
           )}
 
-          {selectedSpot && (
-            <div className="bg-primary/10 border border-primary rounded-lg p-4">
-              <p className="text-sm font-medium">
-                Vybrané místo: <span className="text-primary font-bold">#{selectedSpot}</span>
-              </p>
+          {/* Souhrn rezervace */}
+          <div className="bg-primary/10 border border-primary rounded-lg p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span className="font-medium">
+                {dateRange.from && dateRange.to && (
+                  <>
+                    {format(dateRange.from, "d. MMM", { locale: cs })} - {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
+                    {" "}({getDayCount()} {getDayCount() === 1 ? "den" : getDayCount() < 5 ? "dny" : "dní"})
+                  </>
+                )}
+              </span>
             </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Období rezervace</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dateRange.from && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "d. MMM yyyy", { locale: cs })} -{" "}
-                        {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
-                        <span className="ml-2 text-muted-foreground">
-                          ({getDayCount()} {getDayCount() === 1 ? "den" : getDayCount() < 5 ? "dny" : "dní"})
-                        </span>
-                      </>
-                    ) : (
-                      format(dateRange.from, "d. MMMM yyyy", { locale: cs })
-                    )
-                  ) : (
-                    "Vyberte datum od - do"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
-                  numberOfMonths={2}
-                  locale={cs}
-                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                />
-              </PopoverContent>
-            </Popover>
-            <p className="text-xs text-muted-foreground">
-              Systém zkontroluje dostupnost místa na všechny dny v období
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fisherman-count">Počet rybářů</Label>
-            <Select value={fishermanCount} onValueChange={setFishermanCount}>
-              <SelectTrigger id="fisherman-count">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 rybář</SelectItem>
-                <SelectItem value="2">2 rybáři</SelectItem>
-                <SelectItem value="3">3 rybáři</SelectItem>
-              </SelectContent>
-            </Select>
-            {parseInt(fishermanCount) === 3 && (
-              <p className="text-xs text-muted-foreground">
-                Pro 3 rybáře systém preferuje sousední místa
-              </p>
-            )}
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="font-medium">{fishermanCount} {fishermanCount === 1 ? "rybář" : "rybáři"}</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">Místo: </span>
+              <span className="text-primary font-bold">#{selectedSpot}</span>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -269,15 +195,13 @@ export function ReservationForm({ selectedSpot, onSuccess }: ReservationFormProp
             type="submit"
             className="w-full"
             size="lg"
-            disabled={isSubmitting || !dateRange.from || !dateRange.to || !selectedSpot}
+            disabled={isSubmitting}
           >
             {isSubmitting ? "Odesílám..." : "Odeslat rezervaci"}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            * Rezervace bude potvrzena po kontrole správcem.
-            <br />
-            Budeme vás kontaktovat emailem nebo telefonicky.
+            * Rezervace bude potvrzena po kontrole správcem
           </p>
         </form>
       </CardContent>

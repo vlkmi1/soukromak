@@ -1,55 +1,72 @@
 import { useState, useEffect } from "react";
-import { MapPin, Users, Info } from "lucide-react";
+import { MapPin, Users, Info, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSpotAvailability, type SpotAvailability } from "@/services/reservationService";
 
-interface SpotAvailability {
-  spotNumber: number;
-  available: number;
-  total: number;
-  x: number;
-  y: number;
+interface DateRange {
+  from: Date | undefined;
+  to: Date | undefined;
 }
 
 interface PondMapProps {
-  selectedDate: Date | undefined;
+  dateRange: DateRange;
   fishermanCount: number;
   onSpotSelect: (spotNumber: number) => void;
+  suggestedSpots?: number[];
 }
 
-export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapProps) {
+export function PondMap({ dateRange, fishermanCount, onSpotSelect, suggestedSpots = [] }: PondMapProps) {
   const [spotsData, setSpotsData] = useState<SpotAvailability[]>([]);
   const [hoveredSpot, setHoveredSpot] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Přesné pozice podle skutečné mapy rybníku (percentage based on image)
   const spotPositions = [
-    { number: 1, x: 12, y: 35 },   // 1
-    { number: 2, x: 26, y: 17 },   // 2
-    { number: 3, x: 41, y: 12 },   // 3
-    { number: 4, x: 56, y: 14 },   // 4
-    { number: 5, x: 69, y: 21 },   // 5
-    { number: 6, x: 77, y: 36 },   // 6
-    { number: 7, x: 79, y: 55 },   // 7
-    { number: 8, x: 72, y: 74 },   // 8
-    { number: 9, x: 57, y: 86 },   // 9
-    { number: 10, x: 42, y: 90 },  // 10
-    { number: 11, x: 28, y: 87 },  // 11
-    { number: 12, x: 15, y: 77 },  // 12
-    { number: 13, x: 9, y: 55 },   // 13
+    { number: 1, x: 12, y: 35 },
+    { number: 2, x: 26, y: 17 },
+    { number: 3, x: 41, y: 12 },
+    { number: 4, x: 56, y: 14 },
+    { number: 5, x: 69, y: 21 },
+    { number: 6, x: 77, y: 36 },
+    { number: 7, x: 79, y: 55 },
+    { number: 8, x: 72, y: 74 },
+    { number: 9, x: 57, y: 86 },
+    { number: 10, x: 42, y: 90 },
+    { number: 11, x: 28, y: 87 },
+    { number: 12, x: 15, y: 77 },
+    { number: 13, x: 9, y: 55 },
   ];
 
   useEffect(() => {
-    // Mock data - v produkci by se načítala ze Supabase
-    const mockData: SpotAvailability[] = spotPositions.map((pos, idx) => ({
-      spotNumber: pos.number,
-      available: idx === 3 ? 0 : idx % 3 === 0 ? 1 : 2,
-      total: 2,
-      x: pos.x,
-      y: pos.y,
-    }));
-    setSpotsData(mockData);
-  }, [selectedDate]);
+    if (dateRange.from && dateRange.to) {
+      setIsLoading(true);
+      getSpotAvailability(dateRange.from, dateRange.to)
+        .then((availability) => {
+          setSpotsData(availability);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // Fallback - zobrazit všechna místa jako volná
+      const mockData: SpotAvailability[] = spotPositions.map((pos) => ({
+        spotNumber: pos.number,
+        available: 2,
+        total: 2,
+        x: pos.x,
+        y: pos.y,
+      }));
+      setSpotsData(mockData);
+    }
+  }, [dateRange]);
 
-  const getSpotColor = (available: number, total: number) => {
+  const getSpotColor = (available: number, total: number, spotNumber: number) => {
+    const isSuggested = suggestedSpots.includes(spotNumber);
+    
+    if (isSuggested) {
+      return "bg-accent border-accent ring-4 ring-accent/30";
+    }
+    
     if (available === 0) return "bg-red-500 border-red-600";
     if (available < total) return "bg-amber-500 border-amber-600";
     return "bg-primary border-primary";
@@ -69,7 +86,9 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
           Mapa rybníku Ostrata
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Klikněte na lovné místo pro rezervaci
+          {dateRange.from && dateRange.to
+            ? "Klikněte na volné místo pro rezervaci"
+            : "Vyberte období pro zobrazení dostupnosti"}
         </p>
       </CardHeader>
       <CardContent>
@@ -81,11 +100,19 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
             className="w-full h-auto block"
           />
           
+          {/* Loading overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
+          
           {/* Overlay s lovnými místy */}
           <div className="absolute inset-0">
             {spotsData.map((spot) => {
               const isHovered = hoveredSpot === spot.spotNumber;
               const canSelect = spot.available > 0;
+              const isSuggested = suggestedSpots.includes(spot.spotNumber);
               
               return (
                 <button
@@ -107,9 +134,10 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
                       w-12 h-12 rounded-full border-4 flex items-center justify-center
                       font-bold text-white text-lg shadow-lg
                       transition-all duration-200
-                      ${getSpotColor(spot.available, spot.total)}
+                      ${getSpotColor(spot.available, spot.total, spot.spotNumber)}
                       ${canSelect ? 'cursor-pointer hover:scale-125' : 'cursor-not-allowed opacity-75'}
                       ${isHovered ? 'scale-125 ring-4 ring-white/50' : 'scale-100'}
+                      ${isSuggested ? 'animate-pulse' : ''}
                     `}
                   >
                     {spot.spotNumber}
@@ -121,6 +149,9 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
                       <div className="bg-white border-2 border-primary rounded-lg shadow-xl p-3 min-w-[140px]">
                         <div className="text-sm font-semibold text-foreground mb-1">
                           Místo {spot.spotNumber}
+                          {isSuggested && (
+                            <span className="ml-2 text-xs text-accent">★ Doporučeno</span>
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {getSpotStatus(spot.available, spot.total)}
@@ -139,7 +170,7 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
         </div>
 
         {/* Legenda */}
-        <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+        <div className="mt-4 flex items-center justify-center gap-6 text-sm flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-primary border-2 border-primary"></div>
             <span className="text-sm">Volné</span>
@@ -152,6 +183,12 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
             <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-red-600"></div>
             <span className="text-sm">Obsazeno</span>
           </div>
+          {suggestedSpots.length > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-accent border-2 border-accent animate-pulse"></div>
+              <span className="text-sm">Doporučeno</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
