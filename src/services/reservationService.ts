@@ -201,7 +201,8 @@ export function findAllPossibleCombinations(
     
     for (let i = 1; i < count; i++) {
       const neighbors = adjacentSpots[current] || [];
-      const nextSpot = neighbors.find(n => n > current && !result.includes(n));
+      // Hledáme souseda, který ještě není v result (nevrací se zpět)
+      const nextSpot = neighbors.find(n => !result.includes(n));
       
       if (!nextSpot) return null;
       
@@ -222,11 +223,19 @@ export function findAllPossibleCombinations(
     const consecutiveSpots = findConsecutiveSpots(spot.spotNumber, spotsNeeded);
     
     if (consecutiveSpots && consecutiveSpots.length === spotsNeeded) {
-      combinations.push({
-        spots: consecutiveSpots,
-        description: `Místa ${consecutiveSpots.join("+")} (${spotsNeeded} míst vedle sebe pro ${fishermanCount} rybářů)`,
-        isOptimal: true,
-      });
+      // Kontrola, zda tato kombinace už není v seznamu (kvůli duplicitám)
+      const sortedSpots = [...consecutiveSpots].sort((a, b) => a - b);
+      const isDuplicate = combinations.some(c => 
+        JSON.stringify([...c.spots].sort((a, b) => a - b)) === JSON.stringify(sortedSpots)
+      );
+      
+      if (!isDuplicate) {
+        combinations.push({
+          spots: consecutiveSpots,
+          description: `Místa ${consecutiveSpots.join("+")} (${spotsNeeded} míst vedle sebe pro ${fishermanCount} rybářů)`,
+          isOptimal: true,
+        });
+      }
     }
   }
 
