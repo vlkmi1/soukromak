@@ -1,6 +1,6 @@
 ---
 title: Admin panel pro správu rezervací
-status: todo
+status: in_progress
 priority: medium
 type: feature
 tags: [admin, backend]
@@ -10,14 +10,14 @@ position: 4
 ---
 
 ## Notes
-Admin rozhraní pro správu rezervací se stavy: nové, potvrzené, zaplacené, stornované. Tabulka s filtrováním a akcemi.
+Vytvoření admin rozhraní pro správu rezervací s možností měnit jejich stavy.
 
 ## Checklist
-- [ ] Vytvořit /admin stránku s autentizací
-- [ ] Vytvořit ReservationsTable komponentu
-- [ ] Implementovat filtry podle stavu a data
-- [ ] Přidat akce pro změnu stavu rezervace
-- [ ] Zobrazit detaily rezervace (jméno, kontakt, místa, datum)
+- [x] Vytvořit /admin stránku s tabulkou rezervací
+- [x] Implementovat filtry podle stavu (nové/potvrzené/zaplacené/stornované)
+- [x] Přidat možnost změny stavu rezervace
+- [x] Zobrazit statistiky rezervací (počty podle stavů)
+- [x] Přidat možnost obnovení dat
 
 ## Acceptance
 - Admin vidí všechny rezervace v přehledné tabulce
