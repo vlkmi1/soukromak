@@ -73,12 +73,12 @@ export function PondMap({ selectedDate, fishermanCount, onSpotSelect }: PondMapP
         </p>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full aspect-[16/10] bg-muted rounded-lg overflow-hidden">
+        <div className="relative w-full rounded-lg overflow-hidden border">
           {/* Pozadí s fotografií rybníku */}
           <img 
             src="/pond-map.jpg" 
             alt="Mapa rybníku Ostrata" 
-            className="absolute inset-0 w-full h-full object-cover"
+            className="w-full h-auto block"
           />
           
           {/* Overlay s lovnými místy */}
