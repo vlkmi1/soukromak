@@ -34,6 +34,22 @@ interface Reservation {
   };
 }
 
+interface GroupedReservation {
+  groupId: string;
+  ids: number[];
+  spotNumbers: number[];
+  start_date: string;
+  end_date: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  notes: string | null;
+  status: ReservationStatus;
+  price: number | null;
+  created_at: string;
+  anglerCount: number;
+}
+
 const STATUS_CONFIG = {
   new: { label: "Nová", icon: Clock, color: "bg-blue-500" },
   confirmed: { label: "Potvrzená", icon: CheckCircle, color: "bg-green-500" },
@@ -43,10 +59,52 @@ const STATUS_CONFIG = {
 
 export default function AdminPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
+  const [groupedReservations, setGroupedReservations] = useState<GroupedReservation[]>([]);
+  const [filteredReservations, setFilteredReservations] = useState<GroupedReservation[]>([]);
   const [activeFilter, setActiveFilter] = useState<ReservationStatus | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Seskupit rezervace podle zákazníka + období
+  const groupReservations = (reservations: Reservation[]): GroupedReservation[] => {
+    const groups = new Map<string, Reservation[]>();
+
+    // Seskupit podle zákazníka + start_date + end_date
+    reservations.forEach((reservation) => {
+      const key = `${reservation.customer_email}_${reservation.start_date}_${reservation.end_date}`;
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)!.push(reservation);
+    });
+
+    // Převést skupiny na GroupedReservation objekty
+    return Array.from(groups.entries()).map(([groupId, items]) => {
+      const first = items[0];
+      const spotNumbers = Array.from(
+        new Set(items.map((r) => r.fishing_spots?.number || r.spot_id))
+      ).sort((a, b) => a - b);
+
+      return {
+        groupId,
+        ids: items.map((r) => r.id),
+        spotNumbers,
+        start_date: first.start_date,
+        end_date: first.end_date,
+        customer_name: first.customer_name,
+        customer_email: first.customer_email,
+        customer_phone: first.customer_phone,
+        notes: first.notes,
+        status: first.status,
+        price: first.price,
+        created_at: first.created_at,
+        anglerCount: items.length,
+      };
+    }).sort((a, b) => {
+      // Řadit podle data začátku (nejnovější první)
+      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+    });
+  };
 
   const fetchReservations = async () => {
     setIsLoading(true);
@@ -59,7 +117,9 @@ export default function AdminPage() {
 
       if (error) throw error;
       setReservations(data || []);
-      setFilteredReservations(data || []);
+      
+      const grouped = groupReservations(data || []);
+      setGroupedReservations(grouped);
     } catch (error) {
       console.error("Error fetching reservations:", error);
       toast({
@@ -78,32 +138,37 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (activeFilter === "all") {
-      setFilteredReservations(reservations.filter((reservation) => {
+      setFilteredReservations(groupedReservations.filter((reservation) => {
         // "Vše" zobrazuje všechny KROMĚ stornovaných
         return reservation.status !== "cancelled";
       }));
     } else {
-      setFilteredReservations(reservations.filter((r) => r.status === activeFilter));
+      setFilteredReservations(groupedReservations.filter((r) => r.status === activeFilter));
     }
-  }, [activeFilter, reservations]);
+  }, [activeFilter, groupedReservations]);
 
-  const updateReservationStatus = async (id: number, newStatus: ReservationStatus) => {
+  const updateReservationStatus = async (ids: number[], newStatus: ReservationStatus) => {
     try {
+      // Aktualizovat všechny záznamy ve skupině
       const { error } = await supabase
         .from("reservations")
         .update({ status: newStatus })
-        .eq("id", id);
+        .in("id", ids);
 
       if (error) throw error;
 
+      // Aktualizovat lokální stav
       setReservations((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+        prev.map((r) => (ids.includes(r.id) ? { ...r, status: newStatus } : r))
       );
 
       toast({
         title: "Stav aktualizován",
         description: `Rezervace byla změněna na "${STATUS_CONFIG[newStatus].label}"`,
       });
+
+      // Znovu načíst rezervace pro aktualizaci seskupení
+      fetchReservations();
     } catch (error) {
       console.error("Error updating reservation:", error);
       toast({
@@ -116,11 +181,11 @@ export default function AdminPage() {
 
   const getStats = () => {
     return {
-      total: reservations.length,
-      new: reservations.filter((r) => r.status === "new").length,
-      confirmed: reservations.filter((r) => r.status === "confirmed").length,
-      paid: reservations.filter((r) => r.status === "paid").length,
-      cancelled: reservations.filter((r) => r.status === "cancelled").length,
+      total: groupedReservations.length,
+      new: groupedReservations.filter((r) => r.status === "new").length,
+      confirmed: groupedReservations.filter((r) => r.status === "confirmed").length,
+      paid: groupedReservations.filter((r) => r.status === "paid").length,
+      cancelled: groupedReservations.filter((r) => r.status === "cancelled").length,
     };
   };
 
@@ -242,12 +307,11 @@ export default function AdminPage() {
                         <TableBody>
                           {filteredReservations.map((reservation) => {
                             const StatusIcon = STATUS_CONFIG[reservation.status].icon;
-                            const spotNumber = reservation.fishing_spots?.number || reservation.spot_id;
                             
                             return (
-                              <TableRow key={reservation.id}>
+                              <TableRow key={reservation.groupId}>
                                 <TableCell className="font-mono text-sm">
-                                  #{reservation.id}
+                                  #{reservation.ids[0]}
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-2">
@@ -260,11 +324,19 @@ export default function AdminPage() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="font-medium">
-                                  Místo #{spotNumber}
+                                  {reservation.spotNumbers.length === 1 ? (
+                                    `Místo #${reservation.spotNumbers[0]}`
+                                  ) : (
+                                    `Místa #${reservation.spotNumbers.join(", #")}`
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <div>
                                     <div className="font-medium">{reservation.customer_name}</div>
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                      <Users className="h-3 w-3" />
+                                      <span>{reservation.anglerCount} {reservation.anglerCount === 1 ? "rybář" : "rybáři"}</span>
+                                    </div>
                                     {reservation.notes && (
                                       <div className="text-xs text-muted-foreground mt-1">
                                         {reservation.notes}
@@ -300,7 +372,7 @@ export default function AdminPage() {
                                   <Select
                                     value={reservation.status}
                                     onValueChange={(value) =>
-                                      updateReservationStatus(reservation.id, value as ReservationStatus)
+                                      updateReservationStatus(reservation.ids, value as ReservationStatus)
                                     }
                                   >
                                     <SelectTrigger className="w-40">
