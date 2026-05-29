@@ -1,8 +1,5 @@
-import { useState, useEffect } from "react";
-import { MapPin, Users, Info, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getSpotAvailability, type SpotAvailability } from "@/services/reservationService";
-import { DateRange } from "react-day-picker";
+import { MapPin } from "lucide-react";
+import type { SpotAvailability } from "@/services/reservationService";
 
 interface PondMapProps {
   selectedSpots: number[];
@@ -12,10 +9,6 @@ interface PondMapProps {
 
 export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapProps) {
   const isSpotSelected = (spotNumber: number) => selectedSpots.includes(spotNumber);
-
-  const [spotsData, setSpotsData] = useState<SpotAvailability[]>([]);
-  const [hoveredSpot, setHoveredSpot] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   // Přesné pozice podle mapy - 14 míst číslovaných zprava doleva
   const spotPositions = [
@@ -35,114 +28,91 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
     { number: 14, x: 13, y: 35 },  // 14 - vlevo nahoře
   ];
 
-  useEffect(() => {
-    if (dateRange.from && dateRange.to) {
-      setIsLoading(true);
-      getSpotAvailability(dateRange.from, dateRange.to)
-        .then((availability) => {
-          setSpotsData(availability);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      // Fallback - zobrazit všechna místa jako volná
-      const mockData: SpotAvailability[] = spotPositions.map((pos) => ({
-        spotNumber: pos.number,
-        available: 2,
-        total: 2,
-        x: pos.x,
-        y: pos.y,
-      }));
-      setSpotsData(mockData);
-    }
-  }, [dateRange]);
-
-  const getSpotColor = (available: number, total: number, spotNumber: number) => {
-    const isSuggested = suggestedSpots.includes(spotNumber);
-    
-    if (isSuggested) {
-      return "bg-accent border-accent ring-4 ring-accent/30";
-    }
-    
-    if (available === 0) return "bg-red-500 border-red-600";
-    if (available < total) return "bg-amber-500 border-amber-600";
-    return "bg-primary border-primary";
+  const getSpotData = (spotNumber: number) => {
+    return availability.find(a => a.spotNumber === spotNumber) || {
+      spotNumber,
+      available: 2,
+      total: 2,
+      x: 0,
+      y: 0,
+    };
   };
 
-  const getSpotStatus = (available: number, total: number) => {
-    if (available === 0) return "Obsazeno";
-    if (available < total) return `${available} místo volné`;
-    return "Volné";
+  const getSpotColor = (spotNumber: number) => {
+    if (isSpotSelected(spotNumber)) {
+      return "hsl(var(--primary))";
+    }
+    
+    const data = getSpotData(spotNumber);
+    if (data.available === 0) return "#ef4444"; // red-500
+    if (data.available < data.total) return "#f59e0b"; // amber-500
+    return "hsl(var(--accent))";
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          Mapa rybníku Ostrata
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {dateRange.from && dateRange.to
-            ? "Klikněte na volné místo pro rezervaci"
-            : "Vyberte období pro zobrazení dostupnosti"}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="relative w-full rounded-lg overflow-hidden border">
-          {/* Pozadí s čistou fotografií rybníku */}
-          <img 
-            src="/Mapa-Rybnik-Ostrata-scaled.jpg" 
-            alt="Mapa rybníku Ostrata" 
-            className="w-full h-auto block"
-          />
-          
-          {/* Loading overlay */}
-          {isLoading && (
-            <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-          
-          {/* Overlay s lovnými místy */}
-          <div className="absolute inset-0">
+    <div className="relative w-full rounded-lg overflow-hidden border">
+      {/* Pozadí s čistou fotografií rybníku */}
+      <img 
+        src="/Mapa-Rybnik-Ostrata-scaled.jpg" 
+        alt="Mapa rybníku Ostrata" 
+        className="w-full h-auto block"
+      />
+      
+      {/* Overlay s lovnými místy */}
+      <svg 
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        {spotPositions.map((spot) => (
+          <g key={spot.number}>
             <circle
-                key={spot.number}
-                cx={spot.x}
-                cy={spot.y}
-                r="20"
-                fill={isSpotSelected(spot.number) ? "hsl(var(--primary))" : "hsl(var(--accent))"}
-                stroke="white"
-                strokeWidth="2"
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => onSpotSelect(spot.number)}
-              />
+              cx={spot.x}
+              cy={spot.y}
+              r="2.5"
+              fill={getSpotColor(spot.number)}
+              stroke="white"
+              strokeWidth="0.3"
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onSpotSelect(spot.number)}
+            />
+            <text
+              x={spot.x}
+              y={spot.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              fontSize="2"
+              fontWeight="bold"
+              className="pointer-events-none"
+            >
+              {spot.number}
+            </text>
+          </g>
+        ))}
+      </svg>
+      
+      {/* Legenda */}
+      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+        <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-accent border-2 border-white"></div>
+            <span>Volné</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-amber-500 border-2 border-white"></div>
+            <span>Částečně</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-white"></div>
+            <span>Obsazeno</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(var(--primary))" }}></div>
+            <span>Vybráno</span>
           </div>
         </div>
-
-        {/* Legenda */}
-        <div className="mt-4 flex items-center justify-center gap-6 text-sm flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-primary border-2 border-primary"></div>
-            <span className="text-sm">Volné</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-amber-600"></div>
-            <span className="text-sm">Částečně</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-red-600"></div>
-            <span className="text-sm">Obsazeno</span>
-          </div>
-          {suggestedSpots.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-accent border-2 border-accent animate-pulse"></div>
-              <span className="text-sm">Doporučeno</span>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
