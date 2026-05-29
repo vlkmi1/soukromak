@@ -206,15 +206,18 @@ export function findAllPossibleCombinations(
   // Spočítat kolik míst potřebujeme
   const spotsNeeded = Math.ceil(fishermanCount / 2);
 
-  // Hledáme postupně kombinace sousedních míst
-  const findConsecutiveSpots = (startSpot: number, count: number): number[] | null => {
+  // Hledáme sousední místa v daném směru (direction: 1 = rostoucí, -1 = klesající)
+  const findConsecutiveSpots = (startSpot: number, count: number, direction: 1 | -1): number[] | null => {
     const result: number[] = [startSpot];
     let current = startSpot;
     
     for (let i = 1; i < count; i++) {
       const neighbors = adjacentSpots[current] || [];
-      // Hledáme souseda, který ještě není v result (nevrací se zpět)
-      const nextSpot = neighbors.find(n => !result.includes(n));
+      
+      // Hledat souseda ve správném směru
+      const nextSpot = direction === 1 
+        ? neighbors.find(n => n > current)  // rostoucí směr
+        : neighbors.find(n => n < current); // klesající směr
       
       if (!nextSpot) return null;
       
@@ -228,23 +231,39 @@ export function findAllPossibleCombinations(
     return result;
   };
 
-  // Projít všechna místa a hledat sousední řetězce
+  // Projít všechna místa a hledat sousední řetězce v OBOU směrech
   for (const spot of availability) {
     if (spot.available < 2) continue;
     
-    const consecutiveSpots = findConsecutiveSpots(spot.spotNumber, spotsNeeded);
-    
-    if (consecutiveSpots && consecutiveSpots.length === spotsNeeded) {
-      // Kontrola, zda tato kombinace už není v seznamu (kvůli duplicitám)
-      const sortedSpots = [...consecutiveSpots].sort((a, b) => a - b);
+    // Zkusit rostoucí směr (1 → 2 → 3)
+    const ascendingSpots = findConsecutiveSpots(spot.spotNumber, spotsNeeded, 1);
+    if (ascendingSpots && ascendingSpots.length === spotsNeeded) {
+      const sortedSpots = [...ascendingSpots].sort((a, b) => a - b);
       const isDuplicate = combinations.some(c => 
         JSON.stringify([...c.spots].sort((a, b) => a - b)) === JSON.stringify(sortedSpots)
       );
       
       if (!isDuplicate) {
         combinations.push({
-          spots: consecutiveSpots,
-          description: `Místa ${consecutiveSpots.join("+")} (${spotsNeeded} míst vedle sebe pro ${fishermanCount} rybářů)`,
+          spots: ascendingSpots,
+          description: `Místa ${ascendingSpots.join("+")} (${spotsNeeded} míst vedle sebe pro ${fishermanCount} rybářů)`,
+          isOptimal: true,
+        });
+      }
+    }
+    
+    // Zkusit klesající směr (14 → 13 → 12)
+    const descendingSpots = findConsecutiveSpots(spot.spotNumber, spotsNeeded, -1);
+    if (descendingSpots && descendingSpots.length === spotsNeeded) {
+      const sortedSpots = [...descendingSpots].sort((a, b) => a - b);
+      const isDuplicate = combinations.some(c => 
+        JSON.stringify([...c.spots].sort((a, b) => a - b)) === JSON.stringify(sortedSpots)
+      );
+      
+      if (!isDuplicate) {
+        combinations.push({
+          spots: descendingSpots,
+          description: `Místa ${descendingSpots.join("+")} (${spotsNeeded} míst vedle sebe pro ${fishermanCount} rybářů)`,
           isOptimal: true,
         });
       }
