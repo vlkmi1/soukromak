@@ -69,10 +69,10 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
             <circle
               cx={spot.x}
               cy={spot.y}
-              r="2.5"
+              r="1.8"
               fill={getSpotColor(spot.number)}
               stroke="white"
-              strokeWidth="0.3"
+              strokeWidth="0.25"
               className="cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => onSpotSelect(spot.number)}
             />
@@ -82,7 +82,7 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
               textAnchor="middle"
               dominantBaseline="middle"
               fill="white"
-              fontSize="2"
+              fontSize="1.6"
               fontWeight="bold"
               className="pointer-events-none"
             >
@@ -92,8 +92,8 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
         ))}
       </svg>
       
-      {/* Legenda */}
-      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+      {/* Legenda - blíž ke břehu (nahoru) */}
+      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-accent border-2 border-white"></div>

@@ -133,6 +133,23 @@ export default function ReservationPage() {
             <p className="text-muted-foreground text-lg">Vyberte období a počet rybářů pro zobrazení dostupných míst</p>
           </div>
 
+          {/* Mapa rybníku - zmenšená a nahoře */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Mapa rybníku Ostrata</CardTitle>
+              <CardDescription>Klikněte na místo pro výběr konkrétního lovného místa</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-w-3xl mx-auto">
+                <PondMap
+                  selectedSpots={selectedSpot}
+                  onSpotSelect={handleSpotSelect}
+                  availability={[]}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {/* Kalendář s výběrem dnů */}
             <Card className="lg:col-span-1">
@@ -281,21 +298,6 @@ export default function ReservationPage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Mapa rybníku */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Mapa rybníku Ostrata</CardTitle>
-              <CardDescription>Klikněte na místo pro výběr konkrétního lovného místa</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PondMap
-                selectedSpots={selectedSpot}
-                onSpotSelect={handleSpotSelect}
-                availability={[]}
-              />
-            </CardContent>
-          </Card>
 
           {/* Rezervační formulář */}
           <div className="max-w-2xl mx-auto">
