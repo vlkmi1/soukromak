@@ -10,12 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, AlertCircle, CheckCircle2, Calendar } from "lucide-react";
+import { Users, AlertCircle, CheckCircle2, Calendar, Banknote } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { createReservation } from "@/services/reservationService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRange } from "react-day-picker";
+import { calculateReservationPrice, formatPrice, getPricingPackageName } from "@/lib/pricing";
 
 interface ReservationFormProps {
   selectedSpot: number;
@@ -50,12 +51,15 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
     setSubmitStatus(null);
 
     try {
+      const price = calculateReservationPrice(dateRange.from, dateRange.to);
+      
       const result = await createReservation(
         [selectedSpot],
         fishermanCount,
         dateRange.from,
         dateRange.to,
-        { name, email, phone, notes }
+        { name, email, phone, notes },
+        price
       );
 
       if (result.success) {
@@ -92,6 +96,14 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     return diffDays;
   };
+
+  const totalPrice = dateRange.from && dateRange.to 
+    ? calculateReservationPrice(dateRange.from, dateRange.to)
+    : 0;
+
+  const packageName = dateRange.from && dateRange.to
+    ? getPricingPackageName(dateRange.from, dateRange.to)
+    : "";
 
   return (
     <Card>
@@ -139,6 +151,26 @@ export function ReservationForm({ selectedSpot, dateRange, fishermanCount, onSuc
               <span className="text-primary font-bold">#{selectedSpot}</span>
             </div>
           </div>
+
+          {/* Cena */}
+          {totalPrice > 0 && (
+            <div className="bg-accent/10 border-2 border-accent rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Banknote className="h-4 w-4" />
+                    <span>{packageName}</span>
+                  </div>
+                  <div className="text-2xl font-bold text-accent">
+                    {formatPrice(totalPrice)}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Cena bude potvrzena emailem nebo telefonicky
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="name">Jméno a příjmení *</Label>

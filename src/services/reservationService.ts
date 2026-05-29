@@ -328,7 +328,8 @@ export async function createReservation(
     email: string;
     phone: string;
     notes?: string;
-  }
+  },
+  price: number
 ) {
   try {
     // Pro každé místo vytvoříme rezervaci
@@ -368,6 +369,7 @@ export async function createReservation(
             customer_phone: customerInfo.phone,
             notes: customerInfo.notes,
             status: "new",
+            price: price,
           })
           .select()
           .single();

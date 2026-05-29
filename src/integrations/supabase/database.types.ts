@@ -76,6 +76,7 @@ export type Database = {
           id: number
           notes: string | null
           position_id: number
+          price: number | null
           spot_id: number
           start_date: string
           status: string
@@ -90,6 +91,7 @@ export type Database = {
           id?: number
           notes?: string | null
           position_id: number
+          price?: number | null
           spot_id: number
           start_date: string
           status?: string
@@ -104,6 +106,7 @@ export type Database = {
           id?: number
           notes?: string | null
           position_id?: number
+          price?: number | null
           spot_id?: number
           start_date?: string
           status?: string
