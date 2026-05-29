@@ -2,10 +2,19 @@ import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PondMap } from "@/components/PondMap";
+import { ReservationForm } from "@/components/ReservationForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Calendar } from "lucide-react";
 
 export default function ReservationPage() {
+  const [selectedSpotId, setSelectedSpotId] = useState<number | undefined>();
+  const [selectedSpotName, setSelectedSpotName] = useState<string | undefined>();
+
+  const handleSpotSelect = (spotId: number, spotName: string) => {
+    setSelectedSpotId(spotId);
+    setSelectedSpotName(spotName);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -32,7 +41,17 @@ export default function ReservationPage() {
             </TabsList>
 
             <TabsContent value="map" className="mt-6">
-              <PondMap />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                  <PondMap onSpotSelect={handleSpotSelect} selectedSpotId={selectedSpotId} />
+                </div>
+                <div className="lg:col-span-1">
+                  <ReservationForm 
+                    selectedSpotId={selectedSpotId} 
+                    selectedSpotName={selectedSpotName} 
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="calendar" className="mt-6">

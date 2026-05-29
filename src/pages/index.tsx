@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Fish, MapPin, Users } from "lucide-react";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -22,10 +23,12 @@ export default function HomePage() {
             <p className="text-xl md:text-2xl text-secondary mb-8 max-w-2xl">
               Rezervujte si své oblíbené lovné místo online
             </p>
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg">
-              <Calendar className="mr-2 h-5 w-5" />
-              Zobrazit dostupnost
-            </Button>
+            <Link href="/rezervace">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg">
+                <Calendar className="mr-2 h-5 w-5" />
+                Zobrazit dostupnost
+              </Button>
+            </Link>
           </div>
         </section>
 
@@ -80,9 +83,11 @@ export default function HomePage() {
               <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
                 Každé místo je vhodné pro 1-2 rybáře. Systém automaticky najde nejlepší dostupná místa podle vašich požadavků.
               </p>
-              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-                Zobrazit mapu rybníku
-              </Button>
+              <Link href="/rezervace">
+                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
+                  Zobrazit mapu rybníku
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Users, Mail, Phone, User } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon, Users, Mail, Phone, User, Send } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReservationFormProps {
   selectedSpotId?: number;
@@ -23,16 +26,61 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
     name: "",
     email: "",
     phone: "",
+    notes: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting reservation:", {
-      spotId: selectedSpotId,
-      date,
-      numberOfAnglers,
-      ...formData,
-    });
+    
+    if (!selectedSpotId || !date) {
+      toast({
+        title: "Chyba",
+        description: "Vyberte prosím lovné místo a datum",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("reservations")
+        .insert({
+          fishing_spot_id: selectedSpotId,
+          reservation_date: format(date, "yyyy-MM-dd"),
+          number_of_anglers: parseInt(numberOfAnglers),
+          customer_name: formData.name,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          notes: formData.notes || null,
+          status: "new",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Rezervace odeslána",
+        description: "Vaše rezervace byla úspěšně odeslána. Brzy obdržíte potvrzovací email.",
+      });
+
+      setFormData({ name: "", email: "", phone: "", notes: "" });
+      setDate(undefined);
+      setNumberOfAnglers("1");
+    } catch (error) {
+      console.error("Error creating reservation:", error);
+      toast({
+        title: "Chyba při vytváření rezervace",
+        description: "Nepodařilo se odeslat rezervaci. Zkuste to prosím znovu.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -40,7 +88,7 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
       <CardHeader>
         <CardTitle>Rezervační formulář</CardTitle>
         <CardDescription>
-          {selectedSpotName ? `Rezervace pro ${selectedSpotName}` : "Vyplňte údaje pro dokončení rezervace"}
+          {selectedSpotName ? `Rezervace pro ${selectedSpotName}` : "Vyberte lovné místo na mapě"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -56,6 +104,7 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
                     "w-full justify-start text-left font-normal",
                     !date && "text-muted-foreground"
                   )}
+                  disabled={!selectedSpotId}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "d. MMMM yyyy", { locale: cs }) : "Vyberte datum"}
@@ -76,7 +125,7 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
 
           <div className="space-y-2">
             <Label htmlFor="anglers">Počet rybářů</Label>
-            <Select value={numberOfAnglers} onValueChange={setNumberOfAnglers}>
+            <Select value={numberOfAnglers} onValueChange={setNumberOfAnglers} disabled={!selectedSpotId}>
               <SelectTrigger id="anglers">
                 <SelectValue />
               </SelectTrigger>
@@ -117,6 +166,7 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  disabled={!selectedSpotId}
                 />
               </div>
             </div>
@@ -133,6 +183,7 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  disabled={!selectedSpotId}
                 />
               </div>
             </div>
@@ -149,8 +200,21 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   required
+                  disabled={!selectedSpotId}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Poznámka (volitelné)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Máte nějaké speciální požadavky?"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                disabled={!selectedSpotId}
+                rows={3}
+              />
             </div>
           </div>
 
@@ -167,9 +231,10 @@ export function ReservationForm({ selectedSpotId, selectedSpotName }: Reservatio
             type="submit" 
             className="w-full" 
             size="lg"
-            disabled={!date || !selectedSpotId}
+            disabled={!date || !selectedSpotId || isSubmitting}
           >
-            Odeslat rezervaci
+            <Send className="mr-2 h-4 w-4" />
+            {isSubmitting ? "Odesílám..." : "Odeslat rezervaci"}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">

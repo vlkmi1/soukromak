@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { MapPin, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { MapPin, Users, Info } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface FishingSpot {
   id: number;
@@ -11,6 +11,12 @@ interface FishingSpot {
   y: number;
   availablePositions: number;
   totalPositions: number;
+}
+
+interface PondMapProps {
+  onSpotSelect?: (spotId: number, spotName: string) => void;
+  selectedSpotId?: number;
+  numberOfAnglers?: number;
 }
 
 const FISHING_SPOTS: FishingSpot[] = [
@@ -29,11 +35,95 @@ const FISHING_SPOTS: FishingSpot[] = [
   { id: 13, name: "Místo 13", x: 10, y: 35, availablePositions: 2, totalPositions: 2 },
 ];
 
-export function PondMap() {
-  const [selectedSpot, setSelectedSpot] = useState<FishingSpot | null>(null);
+const areAdjacent = (spot1: number, spot2: number): boolean => {
+  const adjacencyMap: Record<number, number[]> = {
+    1: [2, 13],
+    2: [1, 3],
+    3: [2, 4],
+    4: [3, 5],
+    5: [4, 6],
+    6: [5, 7],
+    7: [6, 8],
+    8: [7, 9],
+    9: [8, 10],
+    10: [9, 11],
+    11: [10, 12],
+    12: [11, 13],
+    13: [12, 1],
+  };
+  return adjacencyMap[spot1]?.includes(spot2) || false;
+};
+
+const findBestSpots = (numberOfAnglers: number, spots: FishingSpot[]): { recommended: number[]; alternatives: number[][] } => {
+  if (numberOfAnglers === 1) {
+    const fullSpot = spots.find(s => s.availablePositions === 2);
+    if (fullSpot) {
+      return { recommended: [fullSpot.id], alternatives: [] };
+    }
+    const partialSpot = spots.find(s => s.availablePositions === 1);
+    if (partialSpot) {
+      return { recommended: [partialSpot.id], alternatives: [] };
+    }
+  }
+
+  if (numberOfAnglers === 2) {
+    const fullSpot = spots.find(s => s.availablePositions === 2);
+    if (fullSpot) {
+      return { recommended: [fullSpot.id], alternatives: [] };
+    }
+    const partialSpots = spots.filter(s => s.availablePositions === 1);
+    if (partialSpots.length >= 2) {
+      return { 
+        recommended: [partialSpots[0].id, partialSpots[1].id],
+        alternatives: []
+      };
+    }
+  }
+
+  if (numberOfAnglers === 3) {
+    for (const spot of spots) {
+      if (spot.availablePositions === 2) {
+        const adjacent = spots.find(s => 
+          areAdjacent(spot.id, s.id) && s.availablePositions >= 1
+        );
+        if (adjacent) {
+          return { 
+            recommended: [spot.id, adjacent.id],
+            alternatives: []
+          };
+        }
+      }
+    }
+
+    const fullSpots = spots.filter(s => s.availablePositions === 2);
+    if (fullSpots.length >= 2) {
+      const closest = fullSpots.slice(0, 2);
+      return { 
+        recommended: [closest[0].id, closest[1].id],
+        alternatives: []
+      };
+    }
+  }
+
+  return { recommended: [], alternatives: [] };
+};
+
+export function PondMap({ onSpotSelect, selectedSpotId, numberOfAnglers = 1 }: PondMapProps) {
   const [hoveredSpot, setHoveredSpot] = useState<number | null>(null);
+  const [recommendedSpots, setRecommendedSpots] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (numberOfAnglers > 1) {
+      const { recommended } = findBestSpots(numberOfAnglers, FISHING_SPOTS);
+      setRecommendedSpots(recommended);
+    } else {
+      setRecommendedSpots([]);
+    }
+  }, [numberOfAnglers]);
 
   const getSpotColor = (spot: FishingSpot): string => {
+    if (selectedSpotId === spot.id) return "fill-primary stroke-primary";
+    if (recommendedSpots.includes(spot.id)) return "fill-accent/80 hover:fill-accent";
     if (spot.availablePositions === 0) return "fill-destructive/80 hover:fill-destructive";
     if (spot.availablePositions === 1) return "fill-accent/60 hover:fill-accent/80";
     return "fill-primary/60 hover:fill-primary/80";
@@ -45,180 +135,119 @@ export function PondMap() {
     return "Volné";
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              Mapa rybníku Ostrata
-            </CardTitle>
-            <CardDescription>
-              Klikněte na lovné místo pro zahájení rezervace
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/10 rounded-lg overflow-hidden">
-              <div 
-                className="absolute inset-0 opacity-20 bg-cover bg-center"
-                style={{ backgroundImage: "url('/generated/pond-aerial.png')" }}
-              />
-              
-              <svg
-                viewBox="0 0 100 80"
-                className="w-full h-full"
-                style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
-              >
-                <ellipse
-                  cx="50"
-                  cy="40"
-                  rx="45"
-                  ry="35"
-                  className="fill-accent/20 stroke-accent/40"
-                  strokeWidth="0.5"
-                />
+  const handleSpotClick = (spot: FishingSpot) => {
+    if (spot.availablePositions > 0 && onSpotSelect) {
+      onSpotSelect(spot.id, spot.name);
+    }
+  };
 
-                {FISHING_SPOTS.map((spot) => (
-                  <g key={spot.id}>
-                    <circle
-                      cx={spot.x}
-                      cy={spot.y}
-                      r={hoveredSpot === spot.id ? 3.5 : 3}
-                      className={`${getSpotColor(spot)} stroke-white cursor-pointer transition-all duration-200`}
-                      strokeWidth="0.5"
-                      onMouseEnter={() => setHoveredSpot(spot.id)}
-                      onMouseLeave={() => setHoveredSpot(null)}
-                      onClick={() => setSelectedSpot(spot)}
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-primary" />
+          Mapa rybníku Ostrata
+        </CardTitle>
+        <CardDescription>
+          Klikněte na lovné místo pro rezervaci
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {numberOfAnglers > 1 && recommendedSpots.length > 0 && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Doporučená místa</AlertTitle>
+            <AlertDescription>
+              Pro {numberOfAnglers} rybáře doporučujeme místa:{" "}
+              {recommendedSpots.map(id => FISHING_SPOTS.find(s => s.id === id)?.name).join(", ")}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-accent/10 to-primary/10 rounded-lg overflow-hidden">
+          <div 
+            className="absolute inset-0 opacity-20 bg-cover bg-center"
+            style={{ backgroundImage: "url('/generated/pond-aerial.png')" }}
+          />
+          
+          <svg
+            viewBox="0 0 100 80"
+            className="w-full h-full"
+            style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
+          >
+            <ellipse
+              cx="50"
+              cy="40"
+              rx="45"
+              ry="35"
+              className="fill-accent/20 stroke-accent/40"
+              strokeWidth="0.5"
+            />
+
+            {FISHING_SPOTS.map((spot) => (
+              <g key={spot.id}>
+                <circle
+                  cx={spot.x}
+                  cy={spot.y}
+                  r={hoveredSpot === spot.id || selectedSpotId === spot.id ? 3.5 : 3}
+                  className={`${getSpotColor(spot)} stroke-white cursor-pointer transition-all duration-200`}
+                  strokeWidth={selectedSpotId === spot.id ? "1" : "0.5"}
+                  onMouseEnter={() => setHoveredSpot(spot.id)}
+                  onMouseLeave={() => setHoveredSpot(null)}
+                  onClick={() => handleSpotClick(spot)}
+                />
+                
+                <text
+                  x={spot.x}
+                  y={spot.y - 5}
+                  textAnchor="middle"
+                  className="fill-foreground text-[3px] font-bold pointer-events-none"
+                  style={{ userSelect: "none" }}
+                >
+                  {spot.id}
+                </text>
+
+                {hoveredSpot === spot.id && (
+                  <g>
+                    <rect
+                      x={spot.x - 12}
+                      y={spot.y + 4}
+                      width="24"
+                      height="8"
+                      rx="1"
+                      className="fill-white/95 stroke-border"
+                      strokeWidth="0.3"
                     />
-                    
                     <text
                       x={spot.x}
-                      y={spot.y - 5}
+                      y={spot.y + 9}
                       textAnchor="middle"
-                      className="fill-foreground text-[3px] font-bold pointer-events-none"
-                      style={{ userSelect: "none" }}
+                      className="fill-foreground text-[2.5px] font-medium pointer-events-none"
                     >
-                      {spot.id}
+                      {spot.name} - {getSpotStatus(spot)}
                     </text>
-
-                    {hoveredSpot === spot.id && (
-                      <g>
-                        <rect
-                          x={spot.x - 12}
-                          y={spot.y + 4}
-                          width="24"
-                          height="8"
-                          rx="1"
-                          className="fill-white/95 stroke-border"
-                          strokeWidth="0.3"
-                        />
-                        <text
-                          x={spot.x}
-                          y={spot.y + 9}
-                          textAnchor="middle"
-                          className="fill-foreground text-[2.5px] font-medium pointer-events-none"
-                        >
-                          {spot.name}
-                        </text>
-                      </g>
-                    )}
                   </g>
-                ))}
-              </svg>
-            </div>
+                )}
+              </g>
+            ))}
+          </svg>
+        </div>
 
-            <div className="flex items-center gap-6 mt-6 flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-primary/60" />
-                <span className="text-sm">Volné (2 pozice)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-accent/60" />
-                <span className="text-sm">Částečně obsazeno (1 pozice)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-destructive/80" />
-                <span className="text-sm">Obsazeno</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="lg:col-span-1">
-        {selectedSpot ? (
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="text-primary">{selectedSpot.name}</CardTitle>
-              <CardDescription>
-                <Badge 
-                  variant={selectedSpot.availablePositions === 0 ? "destructive" : "default"}
-                  className={selectedSpot.availablePositions === 2 ? "bg-primary" : selectedSpot.availablePositions === 1 ? "bg-accent" : ""}
-                >
-                  {getSpotStatus(selectedSpot)}
-                </Badge>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span>
-                  {selectedSpot.availablePositions} z {selectedSpot.totalPositions} pozic volných
-                </span>
-              </div>
-
-              {selectedSpot.availablePositions > 0 ? (
-                <Button className="w-full" size="lg">
-                  Rezervovat místo
-                </Button>
-              ) : (
-                <Button className="w-full" variant="outline" size="lg" disabled>
-                  Místo obsazeno
-                </Button>
-              )}
-
-              <Button 
-                variant="ghost" 
-                className="w-full"
-                onClick={() => setSelectedSpot(null)}
-              >
-                Zrušit výběr
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Vyberte lovné místo</CardTitle>
-              <CardDescription>
-                Klikněte na zelený nebo modrý bod na mapě pro zobrazení detailů a rezervaci
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="text-sm space-y-2">
-                  <p className="font-medium">Dostupná místa:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {FISHING_SPOTS.filter(s => s.availablePositions > 0).map(spot => (
-                      <Button
-                        key={spot.id}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedSpot(spot)}
-                        className="justify-start text-xs"
-                      >
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {spot.name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
+        <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-primary/60" />
+            <span className="text-sm">Volné (2 pozice)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-accent/60" />
+            <span className="text-sm">Částečně obsazeno (1 pozice)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-destructive/80" />
+            <span className="text-sm">Obsazeno</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

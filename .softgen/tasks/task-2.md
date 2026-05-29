@@ -10,16 +10,16 @@ position: 2
 ---
 
 ## Notes
-Vytvoření hlavní komponenty s interaktivní mapou rybníku zobrazující 13 lovných míst. Každé místo ukazuje obsazenost a lze na něj kliknout pro rezervaci.
+Vytvoření interaktivní mapy rybníku s 13 lovnými místy. Každé místo má 2 pozice pro rybáře.
 
 ## Checklist
-- [ ] Vygenerovat obrázek rybníku přes generate_image
-- [ ] Vytvořit PondMap komponentu s SVG overlay pro lovná místa
-- [ ] Implementovat interaktivní body s tooltip a click handler
-- [ ] Vizualizovat stavy míst (volné/částečně obsazené/obsazené)
-- [ ] Propojit s rezervační logikou
+- [x] Vytvořit PondMap komponentu s SVG mapou
+- [x] Zobrazit 13 lovných míst rozmístěných kolem rybníku
+- [x] Implementovat barevné značení podle dostupnosti (volné/částečně/obsazeno)
+- [x] Přidat interaktivitu - hover a kliknutí na místa
+- [x] Propojit s rezervačním formulářem
 
 ## Acceptance
-- Mapa rybníku je plně interaktivní
-- Uživatel vidí okamžitě dostupnost všech míst
+- Uživatel vidí vizuální mapu rybníku s 13 číselnými místy
+- Barevné kódování jasně ukazuje dostupnost každého místa
 - Kliknutí na místo otevře rezervační formulář

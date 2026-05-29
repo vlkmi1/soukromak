@@ -10,17 +10,17 @@ position: 3
 ---
 
 ## Notes
-Chytrý rezervační formulář implementující logiku přiřazování míst podle počtu rybářů (1/2/3). Formulář navrhuje optimální dostupná místa.
+Implementace rezervačního formuláře s chytrou logikou přiřazování míst podle počtu rybářů (1-3).
 
 ## Checklist
-- [ ] Vytvořit ReservationForm komponentu s výběrem počtu rybářů a data
-- [ ] Implementovat logiku pro 1 rybáře (nabídka míst s volnou pozicí)
-- [ ] Implementovat logiku pro 2 rybáře (priorita celých volných míst)
-- [ ] Implementovat logiku pro 3 rybáře (hledání sousedních míst)
-- [ ] Zobrazit dostupné varianty s vizualizací na mapě
-- [ ] Odeslat rezervaci do Supabase
+- [x] Vytvořit ReservationForm s datepickerem a výběrem počtu rybářů
+- [x] Implementovat logiku pro 1 rybáře (preferuje celé volné místo)
+- [x] Implementovat logiku pro 2 rybáře (najde jedno celé volné místo)
+- [x] Implementovat logiku pro 3 rybáře (najde sousední místa)
+- [x] Propojit formulář se Supabase pro ukládání rezervací
+- [x] Přidat validaci a feedback pro uživatele
 
 ## Acceptance
-- Formulář správně vypočítává dostupná místa pro všechny scénáře
+- Formulář správně vybírá optimální místa podle počtu rybářů
 - Uživatel vidí doporučené varianty s vysvětlením
 - Rezervace se úspěšně ukládá do databáze
