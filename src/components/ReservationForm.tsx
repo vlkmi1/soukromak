@@ -163,15 +163,15 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
 
   return (
     <>
-      <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
-          <h2 className="text-xl font-bold text-[#1a4d2e]">Dokončení rezervace</h2>
+      <div className="bg-white border border-gray-300 overflow-hidden">
+        <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
+          <h2 className="text-xl font-bold text-[#2a3d32] uppercase tracking-wide">Dokončení rezervace</h2>
           <p className="text-sm text-gray-600 mt-1">Vyplňte kontaktní údaje pro dokončení rezervace</p>
         </div>
         <div className="p-6">
           {submitStatus && (
             <div
-              className={`p-4 rounded-lg mb-6 border-2 ${
+              className={`p-4 rounded mb-6 border ${
                 submitStatus.type === "success" 
                   ? "bg-green-50 border-green-200" 
                   : "bg-red-50 border-red-200"
@@ -191,7 +191,7 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
           )}
 
           {hasGaps && (
-            <div className="p-4 rounded-lg mb-6 border-2 bg-amber-50 border-amber-200">
+            <div className="p-4 rounded mb-6 border bg-amber-50 border-amber-200">
               <AlertTriangle className="h-4 w-4 inline mr-2 text-amber-700" />
               <span className="text-sm font-medium text-amber-800">
                 <strong>Upozornění:</strong> Vybrali jste dny s mezerami. Chybějící dny:{" "}
@@ -203,12 +203,12 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Souhrn rezervace */}
-            <div className="bg-[#f8f9fa] border-2 border-[#1a4d2e] rounded-lg p-4 space-y-3">
+            <div className="bg-[#f5f5f5] border border-[#3d5a43] p-4 space-y-3">
               <div className="flex items-start gap-2 text-sm">
-                <Calendar className="h-5 w-5 text-[#1a4d2e] flex-shrink-0 mt-0.5" />
+                <Calendar className="h-5 w-5 text-[#3d5a43] flex-shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-gray-700">Období:</span>
-                  <div className="text-[#1a4d2e] font-bold">
+                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">Období:</span>
+                  <div className="text-[#2a3d32] font-bold">
                     {dateRange.from && dateRange.to && (
                       <>
                         {format(dateRange.from, "d. MMM", { locale: cs })} - {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
@@ -219,51 +219,51 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
                 </div>
               </div>
               <div className="flex items-start gap-2 text-sm">
-                <Users className="h-5 w-5 text-[#1a4d2e] flex-shrink-0 mt-0.5" />
+                <Users className="h-5 w-5 text-[#3d5a43] flex-shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-gray-700">Počet rybářů:</span>
-                  <div className="text-[#1a4d2e] font-bold">
+                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">Počet rybářů:</span>
+                  <div className="text-[#2a3d32] font-bold">
                     {fishermanCount} {fishermanCount === 1 ? "rybář" : "rybáři"}
                   </div>
                 </div>
               </div>
               <div className="flex items-start gap-2 text-sm">
-                <MapPin className="h-5 w-5 text-[#1a4d2e] flex-shrink-0 mt-0.5" />
+                <MapPin className="h-5 w-5 text-[#3d5a43] flex-shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">
                     {selectedSpots.length === 1 ? "Místo:" : "Místa:"}
                   </span>
-                  <div className="text-[#1a4d2e] font-bold">
+                  <div className="text-[#2a3d32] font-bold">
                     {selectedSpots.map(s => `#${s}`).join(" + ")}
                   </div>
                 </div>
               </div>
-              <div className="pt-3 border-t-2 border-[#1a4d2e]/20">
+              <div className="pt-3 border-t border-[#3d5a43]/20">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-700">Celková cena:</span>
-                  <span className="text-2xl font-bold text-[#1a4d2e]">
+                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">Celková cena:</span>
+                  <span className="text-2xl font-bold text-[#3d5a43]">
                     {formatPrice(calculateReservationPrice(dateRange.from!, dateRange.to!, fishermanCount))}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Kontaktní formulář - jednoduchý styl */}
+            {/* Kontaktní formulář */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-700 font-semibold">Jméno a příjmení *</Label>
+                <Label htmlFor="name" className="text-gray-700 font-semibold uppercase text-xs tracking-wide">Jméno a příjmení *</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="Jan Novák"
-                  className="border-2 border-gray-300 focus:border-[#1a4d2e]"
+                  className="border-gray-300 focus:border-[#3d5a43]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700 font-semibold">Email *</Label>
+                <Label htmlFor="email" className="text-gray-700 font-semibold uppercase text-xs tracking-wide">Email *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -271,12 +271,12 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="jan.novak@email.cz"
-                  className="border-2 border-gray-300 focus:border-[#1a4d2e]"
+                  className="border-gray-300 focus:border-[#3d5a43]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-gray-700 font-semibold">Telefon *</Label>
+                <Label htmlFor="phone" className="text-gray-700 font-semibold uppercase text-xs tracking-wide">Telefon *</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -284,26 +284,26 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
                   onChange={(e) => setPhone(e.target.value)}
                   required
                   placeholder="+420 123 456 789"
-                  className="border-2 border-gray-300 focus:border-[#1a4d2e]"
+                  className="border-gray-300 focus:border-[#3d5a43]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-gray-700 font-semibold">Poznámka (volitelné)</Label>
+                <Label htmlFor="notes" className="text-gray-700 font-semibold uppercase text-xs tracking-wide">Poznámka (volitelné)</Label>
                 <Textarea
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Další požadavky nebo poznámky..."
                   rows={3}
-                  className="border-2 border-gray-300 focus:border-[#1a4d2e]"
+                  className="border-gray-300 focus:border-[#3d5a43]"
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-[#1a4d2e] hover:bg-[#2d6b42] text-white font-bold"
+              className="w-full bg-[#3d5a43] hover:bg-[#4a6850] text-white font-bold uppercase tracking-wider"
               size="lg"
               disabled={isSubmitting}
             >
@@ -340,7 +340,7 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
             <AlertDialogCancel onClick={() => setPendingSubmit(false)}>
               Zrušit a upravit dny
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmWithGaps} className="bg-[#1a4d2e] hover:bg-[#2d6b42]">
+            <AlertDialogAction onClick={handleConfirmWithGaps} className="bg-[#3d5a43] hover:bg-[#4a6850]">
               Ano, pokračovat
             </AlertDialogAction>
           </AlertDialogFooter>

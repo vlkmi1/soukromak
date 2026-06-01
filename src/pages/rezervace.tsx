@@ -215,14 +215,14 @@ export default function ReservationPage() {
       <main className="flex-1 py-12">
         <div className="container max-w-6xl">
           <div className="mb-12 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#1a4d2e] mb-4">Rezervace lovných míst</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-[#2a3d32] mb-4 uppercase tracking-wide">Rezervace lovných míst</h1>
             <p className="text-lg text-gray-600">Vyberte období a počet rybářů pro zobrazení dostupných míst</p>
           </div>
 
-          {/* Mapa rybníku - jednoduchý box bez karty */}
-          <div className="mb-12 bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
-              <h2 className="text-xl font-bold text-[#1a4d2e]">Mapa rybníku Ostrata</h2>
+          {/* Mapa rybníku - jednoduchý box */}
+          <div className="mb-12 bg-white border border-gray-300 overflow-hidden">
+            <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
+              <h2 className="text-xl font-bold text-[#2a3d32] uppercase tracking-wide">Mapa rybníku Ostrata</h2>
               <p className="text-sm text-gray-600 mt-1">Klikněte na místo pro výběr konkrétního lovného místa</p>
             </div>
             <div className="p-6">
@@ -237,10 +237,10 @@ export default function ReservationPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Výběr období - jednoduchý box */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
-                <h3 className="font-bold text-lg text-[#1a4d2e]">1. Vyberte období</h3>
+            {/* Výběr období */}
+            <div className="bg-white border border-gray-300 overflow-hidden">
+              <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
+                <h3 className="font-bold text-lg text-[#2a3d32] uppercase tracking-wide">1. Vyberte období</h3>
               </div>
               <div className="p-6">
                 <Calendar
@@ -258,7 +258,7 @@ export default function ReservationPage() {
                   }}
                   modifiersStyles={{
                     selected: {
-                      backgroundColor: "hsl(142 70% 25%)",
+                      backgroundColor: "#3d5a43",
                       color: "white",
                       fontWeight: "bold",
                     },
@@ -279,37 +279,37 @@ export default function ReservationPage() {
                 />
                 
                 {/* Legenda barev */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg space-y-2">
-                  <div className="text-xs font-semibold text-gray-600 mb-2">Dostupnost:</div>
+                <div className="mt-4 p-3 bg-gray-50 space-y-2">
+                  <div className="text-xs font-semibold text-gray-600 mb-2 uppercase">Dostupnost:</div>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(142 76% 85%)" }}></div>
+                    <div className="w-4 h-4" style={{ backgroundColor: "hsl(142 76% 85%)" }}></div>
                     <span>Dostatek volných míst</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(38 92% 85%)" }}></div>
+                    <div className="w-4 h-4" style={{ backgroundColor: "hsl(38 92% 85%)" }}></div>
                     <span>Částečně obsazeno</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(0 84% 85%)" }}></div>
+                    <div className="w-4 h-4" style={{ backgroundColor: "hsl(0 84% 85%)" }}></div>
                     <span>Plně obsazeno</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(142 70% 25%)" }}></div>
+                    <div className="w-4 h-4" style={{ backgroundColor: "#3d5a43" }}></div>
                     <span>Vybrané dny</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Výběr počtu rybářů - jednoduchý box */}
+            {/* Výběr počtu rybářů */}
             <div className="space-y-8">
-              <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
-                  <h3 className="font-bold text-lg text-[#1a4d2e]">2. Počet rybářů</h3>
+              <div className="bg-white border border-gray-300 overflow-hidden">
+                <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
+                  <h3 className="font-bold text-lg text-[#2a3d32] uppercase tracking-wide">2. Počet rybářů</h3>
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fishermanCount">Kolik vás bude?</Label>
+                    <Label htmlFor="fishermanCount" className="uppercase text-sm tracking-wide">Kolik vás bude?</Label>
                     <Input
                       id="fishermanCount"
                       type="number"
@@ -317,13 +317,13 @@ export default function ReservationPage() {
                       max="6"
                       value={fishermanCount}
                       onChange={(e) => setFishermanCount(e.target.value)}
-                      className="text-lg"
+                      className="text-lg border-gray-300"
                     />
                   </div>
                   <Button
                     onClick={handleAutomaticSearch}
                     disabled={!dateRange || selectedDates.length === 0}
-                    className="w-full bg-[#1a4d2e] hover:bg-[#2d6b42] text-white"
+                    className="w-full bg-[#3d5a43] hover:bg-[#4a6850] text-white uppercase tracking-wider font-bold"
                     size="lg"
                   >
                     Najít dostupná místa
@@ -333,18 +333,18 @@ export default function ReservationPage() {
 
               {/* Zobrazení výsledků */}
               {(suggestion || allCombinations.length > 0) && (
-                <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
-                    <h3 className="font-bold text-lg text-[#1a4d2e]">3. Dostupná místa</h3>
+                <div className="bg-white border border-gray-300 overflow-hidden">
+                  <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
+                    <h3 className="font-bold text-lg text-[#2a3d32] uppercase tracking-wide">3. Dostupná místa</h3>
                   </div>
                   <div className="p-6">
                     {suggestion && (
-                      <div className={`p-4 rounded-lg mb-4 ${
+                      <div className={`p-4 rounded mb-4 ${
                         suggestion.type === "none" 
-                          ? "bg-red-50 border-2 border-red-200" 
+                          ? "bg-red-50 border border-red-200" 
                           : suggestion.isOptimal 
-                            ? "bg-green-50 border-2 border-green-200" 
-                            : "bg-amber-50 border-2 border-amber-200"
+                            ? "bg-green-50 border border-green-200" 
+                            : "bg-amber-50 border border-amber-200"
                       }`}>
                         <p className={`text-sm font-medium ${
                           suggestion.type === "none" 
@@ -370,10 +370,10 @@ export default function ReservationPage() {
                                 setManuallySelected(true);
                                 setShowForm(true);
                               }}
-                              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                              className={`w-full text-left p-4 border transition-all ${
                                 isSelected 
-                                  ? "bg-[#1a4d2e] text-white border-[#1a4d2e]" 
-                                  : "bg-white border-gray-200 hover:border-[#2d6b42] hover:bg-gray-50"
+                                  ? "bg-[#3d5a43] text-white border-[#3d5a43]" 
+                                  : "bg-white border-gray-300 hover:border-[#4a6850] hover:bg-gray-50"
                               }`}
                             >
                               <div className="font-semibold">

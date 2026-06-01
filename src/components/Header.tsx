@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -7,43 +7,41 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-[#1a4d2e] text-white">
+    <header className="bg-[#3d5a43] text-white">
       <div className="container">
         <div className="flex h-20 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img 
-              src="/logo-ostrata.png" 
-              alt="Rybník Ostrata" 
-              className="h-12 w-auto"
-              onError={(e) => {
-                // Fallback pokud logo neexistuje
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-            <span className="font-bold text-2xl hidden">Rybník Ostrata</span>
+          {/* Logo - jednoduchý text uppercase */}
+          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <div className="text-2xl font-bold tracking-wide">
+              RYBNÍK<br/>OSTRATA
+            </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+          {/* Desktop Navigation - vše uppercase */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link href="/" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Aktuality
             </Link>
-            <Link href="/#o-nas" className="text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#o-nas" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               O nás
             </Link>
-            <Link href="/rezervace" className="text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/rezervace" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Rezervace
             </Link>
-            <Link href="/#zavody" className="text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#informace" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
+              Informace
+            </Link>
+            <Link href="/#zavody" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Závody
             </Link>
-            <Link href="/#foto" className="text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#foto" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Foto
             </Link>
-            <Link href="/#kontakt" className="text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#kontakt" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Kontakt
+            </Link>
+            <Link href="/admin" className="text-sm font-bold tracking-wider text-white/60 hover:text-white/40 transition-colors uppercase">
+              Admin
             </Link>
           </nav>
 
@@ -61,22 +59,25 @@ export function Header() {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <nav className="lg:hidden py-6 border-t border-white/10 space-y-4">
-            <Link href="/" className="block text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Aktuality
             </Link>
-            <Link href="/#o-nas" className="block text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#o-nas" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               O nás
             </Link>
-            <Link href="/rezervace" className="block text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/rezervace" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Rezervace
             </Link>
-            <Link href="/#zavody" className="block text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#informace" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
+              Informace
+            </Link>
+            <Link href="/#zavody" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Závody
             </Link>
-            <Link href="/#foto" className="block text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#foto" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Foto
             </Link>
-            <Link href="/#kontakt" className="block text-sm font-medium text-white/90 hover:text-white transition-colors uppercase">
+            <Link href="/#kontakt" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
               Kontakt
             </Link>
           </nav>

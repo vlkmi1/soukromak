@@ -11,7 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Roboto Condensed", "system-ui", "sans-serif"],
       },
       colors: {
         background: "hsl(var(--background))",
