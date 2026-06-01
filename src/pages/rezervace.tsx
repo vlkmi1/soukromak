@@ -209,23 +209,23 @@ export default function ReservationPage() {
   const dateRange = getDateRange();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Rezervace lovných míst</h1>
-            <p className="text-muted-foreground text-lg">Vyberte období a počet rybářů pro zobrazení dostupných míst</p>
+      <main className="flex-1 py-12">
+        <div className="container max-w-6xl">
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-[#1a4d2e] mb-4">Rezervace lovných míst</h1>
+            <p className="text-lg text-gray-600">Vyberte období a počet rybářů pro zobrazení dostupných míst</p>
           </div>
 
-          {/* Mapa rybníku - zmenšená a nahoře */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Mapa rybníku Ostrata</CardTitle>
-              <CardDescription>Klikněte na místo pro výběr konkrétního lovného místa</CardDescription>
-            </CardHeader>
-            <CardContent>
+          {/* Mapa rybníku - jednoduchý box bez karty */}
+          <div className="mb-12 bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
+              <h2 className="text-xl font-bold text-[#1a4d2e]">Mapa rybníku Ostrata</h2>
+              <p className="text-sm text-gray-600 mt-1">Klikněte na místo pro výběr konkrétního lovného místa</p>
+            </div>
+            <div className="p-6">
               <div className="max-w-3xl mx-auto">
                 <PondMap
                   selectedSpots={selectedSpot}
@@ -233,20 +233,16 @@ export default function ReservationPage() {
                   availability={[]}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-            {/* Kalendář s výběrem dnů */}
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarIcon className="h-5 w-5 text-primary" />
-                  Vyberte dny
-                </CardTitle>
-                <CardDescription>Klikněte na jednotlivé dny pro zaškrtnutí</CardDescription>
-              </CardHeader>
-              <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* Výběr období - jednoduchý box */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
+                <h3 className="font-bold text-lg text-[#1a4d2e]">1. Vyberte období</h3>
+              </div>
+              <div className="p-6">
                 <Calendar
                   mode="single"
                   selected={selectedDates[0]}
@@ -262,7 +258,7 @@ export default function ReservationPage() {
                   }}
                   modifiersStyles={{
                     selected: {
-                      backgroundColor: "hsl(var(--primary))",
+                      backgroundColor: "hsl(142 70% 25%)",
                       color: "white",
                       fontWeight: "bold",
                     },
@@ -283,8 +279,8 @@ export default function ReservationPage() {
                 />
                 
                 {/* Legenda barev */}
-                <div className="mt-4 p-3 bg-muted/50 rounded-lg space-y-2">
-                  <div className="text-xs font-semibold text-muted-foreground mb-2">Dostupnost:</div>
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <div className="text-xs font-semibold text-gray-600 mb-2">Dostupnost:</div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(142 76% 85%)" }}></div>
                     <span>Dostatek volných míst</span>
@@ -298,128 +294,100 @@ export default function ReservationPage() {
                     <span>Plně obsazeno</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-4 h-4 rounded bg-primary"></div>
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: "hsl(142 70% 25%)" }}></div>
                     <span>Vybrané dny</span>
                   </div>
                 </div>
-                
-                {selectedDates.length > 0 && (
-                  <div className="mt-4 p-3 bg-primary/10 border border-primary rounded-lg">
-                    <div className="text-sm font-medium mb-2">Vybrané dny ({selectedDates.length}):</div>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDates.map((date) => (
-                        <Badge key={date.toISOString()} variant="secondary" className="bg-primary/20">
-                          {format(date, "d. MMM", { locale: cs })}
-                        </Badge>
-                      ))}
-                    </div>
-                    {dateRange && (
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        Období: {format(dateRange.from, "d. MMM", { locale: cs })} - {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
-                      </div>
-                    )}
-                  </div>
-                )}
+              </div>
+            </div>
 
-                <div className="mt-6 space-y-2">
-                  <Label htmlFor="fisherman-count">Počet rybářů</Label>
-                  <Input
-                    id="fisherman-count"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={fishermanCount}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFishermanCount(val);
-                      setManuallySelected(false);
-                    }}
-                    placeholder="Zadejte počet rybářů"
-                  />
-                  {parseInt(fishermanCount) > 20 && (
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription className="text-sm">
-                        Pro více než 20 rybářů doporučujeme kontaktovat nás přímo pro soukromou akci na rybníku.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+            {/* Výběr počtu rybářů - jednoduchý box */}
+            <div className="space-y-8">
+              <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
+                  <h3 className="font-bold text-lg text-[#1a4d2e]">2. Počet rybářů</h3>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Výsledky vyhledávání */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  Dostupná místa
-                </CardTitle>
-                <CardDescription>
-                  {selectedDates.length === 0
-                    ? "Vyberte dny v kalendáři pro zobrazení dostupných míst"
-                    : suggestion
-                    ? suggestion.message
-                    : "Hledám volná místa..."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {selectedDates.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <CalendarIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                    <p>Začněte výběrem dnů v kalendáři vlevo</p>
+                <div className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fishermanCount">Kolik vás bude?</Label>
+                    <Input
+                      id="fishermanCount"
+                      type="number"
+                      min="1"
+                      max="6"
+                      value={fishermanCount}
+                      onChange={(e) => setFishermanCount(e.target.value)}
+                      className="text-lg"
+                    />
                   </div>
-                ) : suggestion && !manuallySelected && allCombinations.length > 0 ? (
-                  <div className="space-y-4">
-                    <Alert>
-                      <CheckCircle2 className="h-4 w-4" />
-                      <AlertDescription>
-                        Nalezeno {allCombinations.length} {allCombinations.length === 1 ? "možnost" : allCombinations.length < 5 ? "možnosti" : "možností"} pro {fishermanCount} {parseInt(fishermanCount) === 1 ? "rybáře" : "rybáře"}
-                      </AlertDescription>
-                    </Alert>
+                  <Button
+                    onClick={handleAutomaticSearch}
+                    disabled={!dateRange || selectedDates.length === 0}
+                    className="w-full bg-[#1a4d2e] hover:bg-[#2d6b42] text-white"
+                    size="lg"
+                  >
+                    Najít dostupná místa
+                  </Button>
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label>Dostupné možnosti ({allCombinations.length})</Label>
-                      <div className="grid gap-2">
-                        {allCombinations.map((combo, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleCombinationSelect(combo.spots)}
-                            className="flex items-center justify-between p-4 border-2 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors text-left"
-                          >
-                            <div>
-                              <div className="font-semibold text-primary">
-                                {combo.spots.length === 1 ? "Místo" : "Místa"} #{combo.spots.join(", #")}
-                              </div>
-                              <div className="text-sm text-muted-foreground">{combo.description}</div>
-                            </div>
-                            <Badge variant="secondary" className="bg-primary text-primary-foreground">
-                              Vybrat
-                            </Badge>
-                          </button>
-                        ))}
+              {/* Zobrazení výsledků */}
+              {(suggestion || allCombinations.length > 0) && (
+                <div className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+                  <div className="bg-[#f8f9fa] border-b-2 border-gray-200 px-6 py-4">
+                    <h3 className="font-bold text-lg text-[#1a4d2e]">3. Dostupná místa</h3>
+                  </div>
+                  <div className="p-6">
+                    {suggestion && (
+                      <div className={`p-4 rounded-lg mb-4 ${
+                        suggestion.type === "none" 
+                          ? "bg-red-50 border-2 border-red-200" 
+                          : suggestion.isOptimal 
+                            ? "bg-green-50 border-2 border-green-200" 
+                            : "bg-amber-50 border-2 border-amber-200"
+                      }`}>
+                        <p className={`text-sm font-medium ${
+                          suggestion.type === "none" 
+                            ? "text-red-800" 
+                            : suggestion.isOptimal 
+                              ? "text-green-800" 
+                              : "text-amber-800"
+                        }`}>
+                          {suggestion.message}
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                ) : suggestion && manuallySelected ? (
-                  <div>
-                    <Alert variant={suggestion.isOptimal ? "default" : "destructive"}>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>{suggestion.message}</AlertDescription>
-                    </Alert>
-                    {suggestion.isOptimal && (
-                      <Button onClick={() => setShowForm(true)} className="mt-4 w-full" size="lg">
-                        Pokračovat k rezervaci
-                      </Button>
+                    )}
+
+                    {allCombinations.length > 0 && (
+                      <div className="space-y-2">
+                        {allCombinations.map((combo, idx) => {
+                          const isSelected = JSON.stringify(combo.spots.sort()) === JSON.stringify(selectedSpot.sort());
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setSelectedSpot(combo.spots);
+                                setManuallySelected(true);
+                                setShowForm(true);
+                              }}
+                              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                                isSelected 
+                                  ? "bg-[#1a4d2e] text-white border-[#1a4d2e]" 
+                                  : "bg-white border-gray-200 hover:border-[#2d6b42] hover:bg-gray-50"
+                              }`}
+                            >
+                              <div className="font-semibold">
+                                {combo.description}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>Načítám dostupnost...</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Rezervační formulář */}

@@ -1,127 +1,113 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Fish, MapPin, Users } from "lucide-react";
 import Link from "next/link";
+import { Calendar, Fish, MapPin } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      
+
       <main className="flex-1">
-        <section className="relative h-[500px] bg-gradient-to-b from-accent/20 to-background overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: "url('/generated/pond-aerial.png')" }}
-          />
-          <div className="container relative h-full flex flex-col justify-center items-center text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-foreground">
+        {/* Hero sekce */}
+        <section className="relative bg-gradient-to-b from-[#1a4d2e] to-[#2d6b42] text-white py-20">
+          <div className="container text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Rybník Ostrata
             </h1>
-            <p className="text-xl md:text-2xl text-secondary mb-8 max-w-2xl">
-              Rezervujte si své oblíbené lovné místo online
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto">
+              Kaprový rybník v Novém Veselí s 14 lovnými místy
             </p>
             <Link href="/rezervace">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg">
+              <Button size="lg" className="bg-white text-[#1a4d2e] hover:bg-white/90 text-lg px-8 py-6">
                 <Calendar className="mr-2 h-5 w-5" />
-                Zobrazit dostupnost
+                Rezervovat lovné místo
               </Button>
             </Link>
           </div>
         </section>
 
-        <section className="py-16 bg-muted/50">
-          <div className="container">
-            <h2 className="text-3xl font-bold text-center mb-12">Jak to funguje</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card className="border-2 hover:border-primary transition-colors">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <MapPin className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle>1. Vyberte místo</CardTitle>
-                  <CardDescription>
-                    Prohlédněte si interaktivní mapu rybníku s 13 lovnými místy
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-2 hover:border-primary transition-colors">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                    <Calendar className="h-6 w-6 text-accent" />
-                  </div>
-                  <CardTitle>2. Zvolte datum</CardTitle>
-                  <CardDescription>
-                    Vyberte si termín a počet rybářů (1-3 osoby)
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-2 hover:border-primary transition-colors">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
-                    <Fish className="h-6 w-6 text-secondary" />
-                  </div>
-                  <CardTitle>3. Potvrďte rezervaci</CardTitle>
-                  <CardDescription>
-                    Vyplňte kontaktní údaje a dokončete rezervaci
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16">
-          <div className="container">
-            <div className="bg-primary text-white rounded-2xl p-12 text-center">
-              <Users className="h-16 w-16 mx-auto mb-6 opacity-90" />
-              <h2 className="text-3xl font-bold mb-4">13 lovných míst</h2>
-              <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-                Každé místo je vhodné pro 1-2 rybáře. Systém automaticky najde nejlepší dostupná místa podle vašich požadavků.
-              </p>
-              <Link href="/rezervace">
-                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-                  Zobrazit mapu rybníku
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-16 bg-muted/50">
+        {/* O rybníku */}
+        <section className="py-16 bg-white" id="o-nas">
           <div className="container max-w-4xl">
-            <h2 className="text-3xl font-bold text-center mb-12">Důležité informace</h2>
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Kapacita míst</CardTitle>
-                  <CardDescription>
-                    Každé z 13 lovných míst může pojmout maximálně 2 rybáře. Při rezervaci pro více osob systém automaticky vyhledá vhodná sousední místa.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#1a4d2e] mb-4">
+                O rybníku
+              </h2>
+              <div className="w-20 h-1 bg-[#2d6b42] mx-auto mb-6"></div>
+            </div>
+            
+            <div className="prose prose-lg max-w-none text-gray-700">
+              <p className="text-lg leading-relaxed mb-6">
+                Rybník Ostrata je kaprový rybník nacházející se v Novém Veselí. 
+                Nabízíme 14 kvalitních lovných míst s možností rezervace online.
+              </p>
+              <p className="text-lg leading-relaxed">
+                Každé lovné místo může pojmout až 2 rybáře. Rybník je ideální 
+                pro sportovní lov kaprů i rodinné rybářské akce.
+              </p>
+            </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Potvrzení rezervace</CardTitle>
-                  <CardDescription>
-                    Po odeslání rezervace obdržíte potvrzovací email. Rezervace je platná až po jejím potvrzení správcem.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+            <div className="grid md:grid-cols-2 gap-8 mt-12">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-[#1a4d2e]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <MapPin className="h-6 w-6 text-[#1a4d2e]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-[#1a4d2e] mb-2">14 lovných míst</h3>
+                  <p className="text-gray-600">Každé místo s kapacitou pro 2 rybáře</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-[#1a4d2e]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Fish className="h-6 w-6 text-[#1a4d2e]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-[#1a4d2e] mb-2">Kaprový rybník</h3>
+                  <p className="text-gray-600">Kvalitní násada a udržovaný rybník</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Storno podmínky</CardTitle>
-                  <CardDescription>
-                    Rezervaci je možné zrušit nejpozději 24 hodin před termínem. Kontaktujte nás prosím emailem nebo telefonicky.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+        {/* Rezervace CTA */}
+        <section className="py-16 bg-[#f8f9fa]">
+          <div className="container text-center max-w-3xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1a4d2e] mb-6">
+              Připraveni na lov?
+            </h2>
+            <p className="text-lg text-gray-600 mb-8">
+              Rezervujte si lovné místo online a vyberte si termín, který vám vyhovuje.
+            </p>
+            <Link href="/rezervace">
+              <Button size="lg" className="bg-[#1a4d2e] hover:bg-[#2d6b42] text-white text-lg px-8 py-6">
+                <Calendar className="mr-2 h-5 w-5" />
+                Rezervovat nyní
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Kontakt */}
+        <section className="py-16 bg-white" id="kontakt">
+          <div className="container max-w-4xl">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#1a4d2e] mb-4">
+                Kontakt
+              </h2>
+              <div className="w-20 h-1 bg-[#2d6b42] mx-auto mb-6"></div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-lg text-gray-700 mb-4">
+                Rybník Ostrata, Nové Veselí
+              </p>
+              <p className="text-gray-600">
+                Pro více informací nás kontaktujte prostřednictvím sociálních sítí.
+              </p>
             </div>
           </div>
         </section>
