@@ -1,4 +1,4 @@
-# Rezervační systém Rybník Ostrata
+# Rezervační systém pro soukromý rybník 
 
 ## Vize
 Webová aplikace pro rezervaci lovných míst na rybníku. Umožňuje rybářům intuitivně vybrat místo přímo na interaktivní mapě rybníku a provádět rezervace online. Správci spravují rezervace přes admin rozhraní.
