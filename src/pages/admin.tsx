@@ -408,7 +408,7 @@ export default function AdminPage() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold mb-2">Admin panel</h1>
-              <p className="text-muted-foreground text-lg">Správa rezervací rybníku Ostrata</p>
+              <p className="text-muted-foreground text-lg">Správa rezervací rybníku soukromák</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
