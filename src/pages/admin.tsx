@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, Eye, DollarSign, XCircle, CheckCircle, Clock, Palette } from "lucide-react";
+import { Calendar, MapPin, Eye, DollarSign, XCircle, CheckCircle, Clock, Palette, Lock, ChevronLeft, ChevronRight, Users, Phone } from "lucide-react";
 import { FileEdit, Image as ImageIcon } from "lucide-react";
 import { format, addDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { cs } from "date-fns/locale";
@@ -411,18 +411,14 @@ export default function AdminPage() {
               <p className="text-muted-foreground text-lg">Správa rezervací rybníku Ostrata</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <button
-                onClick={() => setActiveView("reservations")}
-                className={`p-6 border-2 text-left transition-all ${
-                  activeView === "reservations"
-                    ? "bg-[#3d5a43] text-white border-[#3d5a43]"
-                    : "bg-white border-gray-300 hover:border-[#3d5a43]"
-                }`}
-              >
-                <Calendar className="h-12 w-12 mb-4" />
-                <h2 className="text-xl font-bold uppercase tracking-wide">Rezervace</h2>
-                <p className="text-sm mt-2 opacity-90">Správa všech rezervací</p>
-              </button>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Celkem</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.total}</div>
+                </CardContent>
+              </Card>
 
               <button
                 onClick={() => router.push("/admin/nastaveni-mist")}
