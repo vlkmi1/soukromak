@@ -307,49 +307,78 @@ export default function MapSettingsPage() {
                     <div 
                       ref={containerRef}
                       className="relative w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden cursor-crosshair"
-                      style={{ paddingBottom: "75%" }}
                       onClick={handleImageClick}
                     >
                       <img
                         ref={imageRef}
                         src={imageUrl}
                         alt="Mapa rybníku"
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="w-full h-auto block"
                         draggable={false}
                       />
                       
-                      {spots.map((spot) => (
-                        <div
-                          key={spot.number}
-                          className={`absolute cursor-move transform -translate-x-1/2 -translate-y-1/2 ${
-                            draggedSpot === spot.number ? "z-50" : "z-10"
-                          }`}
-                          style={{
-                            left: `${spot.x_position}%`,
-                            top: `${spot.y_position}%`,
-                          }}
-                          onMouseDown={(e) => handleSpotDrag(e, spot.number)}
-                        >
-                          <div className="relative group">
-                            <div className={`w-8 h-8 rounded-full border-3 border-white shadow-lg flex items-center justify-center text-xs font-bold text-white transition-all ${
-                              draggedSpot === spot.number 
-                                ? "bg-blue-600 scale-125" 
-                                : "bg-[#3d5a43] hover:scale-110"
-                            }`}>
+                      {/* SVG overlay s puntíky - stejný přístup jako v PondMap */}
+                      <svg 
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                      >
+                        {spots.map((spot) => (
+                          <g key={spot.number} className="pointer-events-auto">
+                            <circle
+                              cx={spot.x_position}
+                              cy={spot.y_position}
+                              r="2.5"
+                              fill={draggedSpot === spot.number ? "#2563eb" : "#3d5a43"}
+                              stroke="white"
+                              strokeWidth="0.3"
+                              className="cursor-move"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                handleSpotDrag(e as any, spot.number);
+                              }}
+                            />
+                            <text
+                              x={spot.x_position}
+                              y={spot.y_position}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              fill="white"
+                              fontSize="2"
+                              fontWeight="bold"
+                              className="pointer-events-none"
+                            >
                               {spot.number}
-                            </div>
-                            <button
+                            </text>
+                            {/* Tlačítko X pro smazání */}
+                            <g 
+                              className="pointer-events-auto cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDeleteSpot(spot.number);
                               }}
-                              className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                             >
-                              <X className="h-3 w-3 text-white" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                              <circle
+                                cx={spot.x_position + 3}
+                                cy={spot.y_position - 3}
+                                r="1.5"
+                                fill="#ef4444"
+                              />
+                              <text
+                                x={spot.x_position + 3}
+                                y={spot.y_position - 3}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                fill="white"
+                                fontSize="1.5"
+                                fontWeight="bold"
+                              >
+                                ×
+                              </text>
+                            </g>
+                          </g>
+                        ))}
+                      </svg>
                     </div>
                   )}
 
