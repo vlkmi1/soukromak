@@ -287,14 +287,19 @@ export default function ReservationPage() {
               </div>
               <div className="p-6">
                 <Calendar
-                  mode="single"
-                  selected={selectedDates[0]}
-                  onSelect={handleDateSelect}
+                  mode="multiple"
+                  selected={selectedDates}
+                  onSelect={(dates) => {
+                    if (dates) {
+                      setSelectedDates(Array.isArray(dates) ? dates : [dates]);
+                      setManuallySelected(false);
+                      setShowForm(false);
+                    }
+                  }}
                   locale={cs}
                   disabled={(date) => date < new Date()}
                   className="rounded-md border"
                   modifiers={{
-                    selected: selectedDates,
                     fullyAvailable: fullyAvailable,
                     partiallyAvailable: partiallyAvailable,
                     fullyBooked: fullyBooked,
