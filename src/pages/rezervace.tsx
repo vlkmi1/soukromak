@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Chatbot } from "@/components/Chatbot";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,22 @@ export default function ReservationPage() {
   const [showForm, setShowForm] = useState(false);
   const [dayAvailabilities, setDayAvailabilities] = useState<DayAvailability[]>([]);
   const [currentAvailability, setCurrentAvailability] = useState<any[]>([]);
+
+  // Načíst parametry z URL (z chatbota)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const datesParam = params.get("dates");
+    const countParam = params.get("count");
+    
+    if (datesParam) {
+      const dates = datesParam.split(",").map(d => new Date(d));
+      setSelectedDates(dates);
+    }
+    
+    if (countParam) {
+      setFishermanCount(countParam);
+    }
+  }, []);
 
   // Načíst dostupnost pro všechny nadcházející dny (30 dní dopředu)
   useEffect(() => {
@@ -460,6 +477,7 @@ export default function ReservationPage() {
       </main>
 
       <Footer />
+      <Chatbot />
     </div>
   );
 }
