@@ -9,9 +9,9 @@ export function Footer() {
     getBrandSettings().then(setBrand);
   }, []);
 
-  const siteName = brand?.site_name || "Rybník Ostrata";
+  const siteName = brand?.site_name || "Rybník soukromák";
   const contactPhone = brand?.contact_phone || "+420 123 456 789";
-  const contactEmail = brand?.contact_email || "info@rybnikostrata.cz";
+  const contactEmail = brand?.contact_email || "info@soukromak.cz";
   const contactAddress = brand?.contact_address || "Nové Veselí";
   const facebookUrl = brand?.facebook_url;
   const instagramUrl = brand?.instagram_url;
