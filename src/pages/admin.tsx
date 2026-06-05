@@ -556,7 +556,6 @@ export default function AdminPage() {
                       src={mapImageUrl}
                       alt="Mapa rybníku" 
                       className="w-full h-auto block"
-                      style={{ maxHeight: "300px", objectFit: "contain" }}
                     />
                     
                     {/* SVG overlay s puntíky */}
