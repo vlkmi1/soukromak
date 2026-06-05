@@ -278,7 +278,7 @@ export default function GalleryAdminPage() {
                   id="title"
                   value={newImage.title}
                   onChange={(e) => setNewImage({ ...newImage, title: e.target.value })}
-                  placeholder="např. Rybník Ostrata v létě"
+                  placeholder="např. Rybník soukromák v létě"
                 />
               </div>
               <div>
