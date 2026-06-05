@@ -15,6 +15,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_settings: {
+        Row: {
+          accent_color: string
+          background_color: string
+          body_font: string
+          contact_address: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          foreground_color: string
+          heading_font: string
+          id: number
+          logo_url: string | null
+          primary_color: string
+          secondary_color: string
+          site_name: string
+          site_tagline: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string
+          background_color?: string
+          body_font?: string
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          foreground_color?: string
+          heading_font?: string
+          id?: number
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          site_name?: string
+          site_tagline?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string
+          background_color?: string
+          body_font?: string
+          contact_address?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          foreground_color?: string
+          heading_font?: string
+          id?: number
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          site_name?: string
+          site_tagline?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       fishing_spots: {
         Row: {
           created_at: string | null
