@@ -70,25 +70,32 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const slug = params?.slug as string;
+  try {
+    const slug = params?.slug as string;
 
-  const { data: page, error } = await supabase
-    .from("pages")
-    .select("title, content, excerpt, featured_image")
-    .eq("slug", slug)
-    .eq("published", true)
-    .single();
+    const { data: page, error } = await supabase
+      .from("pages")
+      .select("title, content, excerpt, featured_image")
+      .eq("slug", slug)
+      .eq("published", true)
+      .single();
 
-  if (error || !page) {
+    if (error || !page) {
+      return {
+        notFound: true,
+      };
+    }
+
+    return {
+      props: {
+        page,
+      },
+      revalidate: 60,
+    };
+  } catch (error) {
+    console.error("Error in getStaticProps:", error);
     return {
       notFound: true,
     };
   }
-
-  return {
-    props: {
-      page,
-    },
-    revalidate: 60,
-  };
 };
