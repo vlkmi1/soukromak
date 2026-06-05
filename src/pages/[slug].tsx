@@ -66,9 +66,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
     .select("slug")
     .eq("published", true);
 
-  const paths = (pages || []).map((page) => ({
-    params: { slug: page.slug },
-  }));
+  // Vyloučit stránky s vlastními dedikovanými soubory
+  const excludedSlugs = ["fotogalerie", "rezervace", "admin"];
+  
+  const paths = (pages || [])
+    .filter(page => !excludedSlugs.includes(page.slug))
+    .map((page) => ({
+      params: { slug: page.slug },
+    }));
 
   return {
     paths,
