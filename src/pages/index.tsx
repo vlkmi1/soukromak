@@ -16,11 +16,11 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-black/30"></div>
           
           <div className="container text-center relative z-10">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-wide uppercase">
-              Rybník Ostrata
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-wide uppercase">Můj soukromák
+
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto font-light">
-              Kaprový rybník v Novém Veselí s 14 lovnými místy
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto font-light">Kaprový rybník se 14 lovnými místy
+
             </p>
             <Link href="/rezervace">
               <Button size="lg" className="bg-[#3d5a43] hover:bg-[#4a6850] text-white text-base px-8 py-6 uppercase tracking-wider font-bold">
@@ -40,9 +40,9 @@ export default function HomePage() {
             </div>
             
             <div className="text-center space-y-6 text-gray-700 text-lg leading-relaxed">
-              <p>
-                Rybník Ostrata je kaprový rybník nacházející se v Novém Veselí. 
-                Nabízíme 14 kvalitních lovných míst s možností rezervace online.
+              <p>Rybník soukromák je kaprový rybník nacházející se v Novém Veselí. Nabízíme 14 kvalitních lovných míst s možností rezervace online.
+
+
               </p>
               <p>
                 Každé lovné místo může pojmout až 2 rybáře. Rybník je ideální 
@@ -79,8 +79,8 @@ export default function HomePage() {
             </div>
 
             <div className="text-center space-y-4">
-              <p className="text-lg text-gray-700">
-                Rybník Ostrata, Nové Veselí
+              <p className="text-lg text-gray-700">Rybník soukromák, Nové Veselí
+
               </p>
               <p className="text-gray-600">
                 Pro více informací nás kontaktujte prostřednictvím sociálních sítí.
@@ -91,6 +91,6 @@ export default function HomePage() {
       </main>
 
       <Footer />
-    </div>
-  );
+    </div>);
+
 }
