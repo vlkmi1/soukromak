@@ -1,10 +1,9 @@
-import { GetStaticProps } from "next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Chatbot } from "@/components/Chatbot";
 import { supabase } from "@/lib/supabase";
 import { SEO } from "@/components/SEO";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 interface GalleryImage {
@@ -15,12 +14,29 @@ interface GalleryImage {
   thumbnail_url: string | null;
 }
 
-interface GalleryPageProps {
-  images: GalleryImage[];
-}
-
-export default function GalleryPage({ images }: GalleryPageProps) {
+export default function GalleryPage() {
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+
+  useEffect(() => {
+    loadGallery();
+  }, []);
+
+  const loadGallery = async () => {
+    try {
+      const { data } = await supabase
+        .from("gallery")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+      setImages(data || []);
+    } catch (error) {
+      console.error("Error loading gallery:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -40,7 +56,11 @@ export default function GalleryPage({ images }: GalleryPageProps) {
         </div>
 
         <div className="container max-w-6xl py-16">
-          {images.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center text-gray-600 py-12">
+              <p className="text-lg">Načítám fotografie...</p>
+            </div>
+          ) : images.length === 0 ? (
             <div className="text-center text-gray-600 py-12">
               <p className="text-lg">Zatím nejsou žádné fotografie.</p>
             </div>
@@ -108,27 +128,3 @@ export default function GalleryPage({ images }: GalleryPageProps) {
     </div>
   );
 }
-
-export const getStaticProps: GetStaticProps = async () => {
-  try {
-    const { data: images } = await supabase
-      .from("gallery")
-      .select("*")
-      .order("display_order", { ascending: true });
-
-    return {
-      props: {
-        images: images || [],
-      },
-      revalidate: 60,
-    };
-  } catch (error) {
-    console.error("Error loading gallery:", error);
-    return {
-      props: {
-        images: [],
-      },
-      revalidate: 60,
-    };
-  }
-};
