@@ -209,7 +209,6 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    checkAuth();
     fetchReservations();
     loadSpotPositions();
   }, []);
