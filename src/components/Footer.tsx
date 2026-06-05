@@ -13,8 +13,8 @@ export function Footer() {
   const contactPhone = brand?.contact_phone || "+420 123 456 789";
   const contactEmail = brand?.contact_email || "info@rybnikostrata.cz";
   const contactAddress = brand?.contact_address || "Nové Veselí";
-  const facebookUrl = brand?.social_facebook;
-  const instagramUrl = brand?.social_instagram;
+  const facebookUrl = brand?.facebook_url;
+  const instagramUrl = brand?.instagram_url;
 
   return (
     <footer className="bg-[#2a3d32] text-white py-8">

@@ -193,11 +193,11 @@ export default function BrandSettingsPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="site_tagline" className="uppercase text-sm tracking-wide">Popisek</Label>
+                    <Label htmlFor="tagline" className="uppercase text-sm tracking-wide">Popisek</Label>
                     <Input
-                      id="site_tagline"
-                      value={brand.site_tagline}
-                      onChange={(e) => updateField("site_tagline", e.target.value)}
+                      id="tagline"
+                      value={brand.tagline}
+                      onChange={(e) => updateField("tagline", e.target.value)}
                       placeholder="Kaprový rybník v Novém Veselí"
                     />
                   </div>
@@ -260,51 +260,48 @@ export default function BrandSettingsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="color_accent" className="uppercase text-sm tracking-wide">Akcentová barva</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="color_accent"
-                          value={brand.color_accent}
-                          onChange={(e) => updateField("color_accent", e.target.value)}
-                          placeholder="142 65% 45%"
-                        />
-                        <div 
-                          className="w-12 h-10 rounded border border-gray-300"
-                          style={{ backgroundColor: `hsl(${brand.color_accent})` }}
-                        />
-                      </div>
+                      <Label htmlFor="accent" className="uppercase text-sm tracking-wide">Accent barva</Label>
+                      <Input
+                        id="accent"
+                        type="text"
+                        value={brand.accent_color}
+                        onChange={(e) => updateField("accent_color", e.target.value)}
+                        placeholder="207 90% 54%"
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formát: H S% L% (např. {brand.accent_color})
+                      </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="color_background" className="uppercase text-sm tracking-wide">Barva pozadí</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="color_background"
-                          value={brand.color_background}
-                          onChange={(e) => updateField("color_background", e.target.value)}
-                          placeholder="0 0% 100%"
-                        />
-                        <div 
-                          className="w-12 h-10 rounded border border-gray-300"
-                          style={{ backgroundColor: `hsl(${brand.color_background})` }}
-                        />
-                      </div>
+                      <Label htmlFor="background" className="uppercase text-sm tracking-wide">Background barva</Label>
+                      <Input
+                        id="background"
+                        type="text"
+                        value={brand.background_color}
+                        onChange={(e) => updateField("background_color", e.target.value)}
+                        placeholder="0 0% 100%"
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formát: H S% L% (např. {brand.background_color})
+                      </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="color_foreground" className="uppercase text-sm tracking-wide">Barva textu</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="color_foreground"
-                          value={brand.color_foreground}
-                          onChange={(e) => updateField("color_foreground", e.target.value)}
-                          placeholder="0 0% 20%"
-                        />
-                        <div 
-                          className="w-12 h-10 rounded border border-gray-300"
-                          style={{ backgroundColor: `hsl(${brand.color_foreground})` }}
-                        />
-                      </div>
+                      <Label htmlFor="foreground" className="uppercase text-sm tracking-wide">Foreground barva</Label>
+                      <Input
+                        id="foreground"
+                        type="text"
+                        value={brand.foreground_color}
+                        onChange={(e) => updateField("foreground_color", e.target.value)}
+                        placeholder="222 47% 11%"
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formát: H S% L% (např. {brand.foreground_color})
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -320,40 +317,28 @@ export default function BrandSettingsPage() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="font_heading" className="uppercase text-sm tracking-wide">Font pro nadpisy</Label>
-                    <select
-                      id="font_heading"
-                      value={brand.font_heading}
-                      onChange={(e) => updateField("font_heading", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      {POPULAR_FONTS.map((font) => (
-                        <option key={font} value={font} style={{ fontFamily: font }}>
-                          {font}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-sm" style={{ fontFamily: brand.font_heading, fontSize: "1.5rem", fontWeight: 700 }}>
-                      Ukázka nadpisu
+                    <Label htmlFor="headingFont">Font nadpisů</Label>
+                    <Input
+                      id="headingFont"
+                      value={brand.heading_font}
+                      onChange={(e) => updateField("heading_font", e.target.value)}
+                      placeholder="Inter"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Např. Inter, Roboto, Open Sans (font z Google Fonts) - aktuálně: {brand.heading_font}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="font_body" className="uppercase text-sm tracking-wide">Font pro text</Label>
-                    <select
-                      id="font_body"
-                      value={brand.font_body}
-                      onChange={(e) => updateField("font_body", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    >
-                      {POPULAR_FONTS.map((font) => (
-                        <option key={font} value={font} style={{ fontFamily: font }}>
-                          {font}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-sm" style={{ fontFamily: brand.font_body }}>
-                      Ukázka běžného textu. Rybník soukromák je kaprový rybník v Novém Veselí.
+                    <Label htmlFor="bodyFont">Font textu</Label>
+                    <Input
+                      id="bodyFont"
+                      value={brand.body_font}
+                      onChange={(e) => updateField("body_font", e.target.value)}
+                      placeholder="Inter"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Např. Inter, Roboto, Open Sans (font z Google Fonts) - aktuálně: {brand.body_font}
                     </p>
                   </div>
                 </div>
@@ -410,22 +395,22 @@ export default function BrandSettingsPage() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="social_facebook" className="uppercase text-sm tracking-wide">Facebook</Label>
+                    <Label htmlFor="facebook">Facebook URL</Label>
                     <Input
-                      id="social_facebook"
-                      value={brand.social_facebook || ""}
-                      onChange={(e) => updateField("social_facebook", e.target.value)}
-                      placeholder="https://www.facebook.com/soukromak"
+                      id="facebook"
+                      value={brand.facebook_url || ""}
+                      onChange={(e) => updateField("facebook_url", e.target.value)}
+                      placeholder="https://www.facebook.com/rybnikostrata"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="social_instagram" className="uppercase text-sm tracking-wide">Instagram</Label>
+                    <Label htmlFor="instagram">Instagram URL</Label>
                     <Input
-                      id="social_instagram"
-                      value={brand.social_instagram || ""}
-                      onChange={(e) => updateField("social_instagram", e.target.value)}
-                      placeholder="https://www.instagram.com/soukromak"
+                      id="instagram"
+                      value={brand.instagram_url || ""}
+                      onChange={(e) => updateField("instagram_url", e.target.value)}
+                      placeholder="https://www.instagram.com/rybnikostrata"
                     />
                   </div>
                 </div>

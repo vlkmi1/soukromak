@@ -69,20 +69,21 @@ export const getBrandSettings = async (): Promise<BrandSettings> => {
   // Defaultní nastavení
   return {
     site_name: "Rybník Ostrata",
-    site_tagline: "Kaprový rybník Ostrata",
+    tagline: "Kaprový rybník Ostrata",
     logo_url: "",
     color_primary: "142 76% 36%",
     color_secondary: "200 18% 46%",
-    color_accent: "207 90% 54%",
-    color_background: "0 0% 100%",
-    color_foreground: "222 47% 11%",
-    font_heading: "Inter",
-    font_body: "Inter",
+    accent_color: "207 90% 54%",
+    background_color: "0 0% 100%",
+    foreground_color: "222 47% 11%",
+    muted_color: "210 40% 96%",
+    heading_font: "Inter",
+    body_font: "Inter",
     contact_phone: "+420 123 456 789",
     contact_email: "info@rybnikostrata.cz",
     contact_address: "Nové Veselí",
-    social_facebook: "",
-    social_instagram: "",
+    facebook_url: "",
+    instagram_url: "",
   };
 };
 
