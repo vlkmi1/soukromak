@@ -96,25 +96,20 @@ export default function MapSettingsPage() {
 
     setUploading(true);
     try {
-      // Upload do Supabase Storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `pond-map-${Date.now()}.${fileExt}`;
-      const { data, error } = await supabase.storage
-        .from("pond-images")
-        .upload(fileName, file);
-
-      if (error) throw error;
-
-      // Získat veřejnou URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("pond-images")
-        .getPublicUrl(fileName);
-
-      setImageUrl(publicUrl);
-      setMessage({ type: "success", text: "Obrázek byl úspěšně nahrán" });
+      // Vytvořit data URL pro okamžitý náhled
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setImageUrl(dataUrl);
+        setMessage({ type: "success", text: "Obrázek byl načten. Nezapomeňte uložit nastavení!" });
+      };
+      reader.readAsDataURL(file);
+      
+      // Pro produkci by se obrázek nahrál na server/CDN
+      // Nyní ukládáme jako data URL přímo do databáze
     } catch (error) {
       console.error("Error uploading image:", error);
-      setMessage({ type: "error", text: "Chyba při nahrávání obrázku" });
+      setMessage({ type: "error", text: "Chyba při načítání obrázku" });
     } finally {
       setUploading(false);
     }

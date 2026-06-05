@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { cs } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/pricing";
+import { useRouter } from "next/navigation";
 
 type ReservationStatus = "new" | "confirmed" | "paid" | "cancelled";
 
@@ -69,6 +71,7 @@ const STATUS_CONFIG = {
 const ADMIN_PIN = "1234"; // V produkci by bylo v .env
 
 export default function AdminPage() {
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
@@ -315,10 +318,16 @@ export default function AdminPage() {
               <h1 className="text-4xl font-bold mb-2">Admin panel</h1>
               <p className="text-muted-foreground text-lg">Správa rezervací rybníku Ostrata</p>
             </div>
-            <Button onClick={fetchReservations} variant="outline" size="lg">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Obnovit
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => router.push("/admin/nastaveni-mist")} variant="outline" size="lg">
+                <MapPin className="mr-2 h-4 w-4" />
+                Nastavení míst
+              </Button>
+              <Button onClick={fetchReservations} variant="outline" size="lg">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Obnovit
+              </Button>
+            </div>
           </div>
 
           {/* Přehled obsazenosti rybníku */}
