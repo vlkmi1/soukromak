@@ -42,7 +42,7 @@ export function Chatbot() {
     if (isOpen && messages.length === 0) {
       addBotMessage("Dobrý den! 👋 Jsem váš asistent pro rezervace na rybníku soukromák. Rád vám pomohu najít volné místo.");
       setTimeout(() => {
-        addBotMessage("Kdy byste chtěli přijet rybařit? Klikněte na tlačítko níže pro výběr data.");
+        addBotMessage("Kdy byste chtěli přijet rybařit? Klikněte na tlačítko níže pro výběr data, prověřím dostupnost.");
         setState("asking_dates");
       }, 1000);
     }
