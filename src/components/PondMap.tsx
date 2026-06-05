@@ -125,7 +125,7 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
       {/* Pozadí s fotografií rybníku */}
       <img 
         src={imageUrl}
-        alt="Mapa rybníku Ostrata" 
+        alt="Mapa rybníku soukromák" 
         className="w-full h-auto block"
       />
       
