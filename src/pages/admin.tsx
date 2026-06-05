@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, CheckCircle, XCircle, Clock, DollarSign, Users, RefreshCw, ChevronLeft, ChevronRight, Lock, MapPin, Phone } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, Clock, DollarSign, Users, RefreshCw, ChevronLeft, ChevronRight, Lock, MapPin, Phone, Palette } from "lucide-react";
 import { format, addDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { cs } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
@@ -321,6 +321,10 @@ export default function AdminPage() {
               <Button onClick={() => router.push("/admin/nastaveni-mist")} variant="outline" size="lg">
                 <MapPin className="mr-2 h-4 w-4" />
                 Nastavení míst
+              </Button>
+              <Button onClick={() => router.push("/admin/nastaveni-brandu")} variant="outline" size="lg">
+                <Palette className="mr-2 h-4 w-4" />
+                Nastavení brandu
               </Button>
               <Button onClick={fetchReservations} variant="outline" size="lg">
                 <RefreshCw className="mr-2 h-4 w-4" />
