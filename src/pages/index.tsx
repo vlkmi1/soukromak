@@ -1,11 +1,34 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Chatbot } from "@/components/Chatbot";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { MapPin, Calendar, Fish } from "lucide-react";
+import { getBrandSettings } from "@/lib/brandService";
 
 export default function HomePage() {
+  const [siteName, setSiteName] = useState("Rybník Ostrata");
+  const [tagline, setTagline] = useState("Kaprový rybník v Novém Veselí");
+
+  useEffect(() => {
+    loadBrandSettings();
+  }, []);
+
+  const loadBrandSettings = async () => {
+    try {
+      const settings = await getBrandSettings();
+      if (settings.site_name) {
+        setSiteName(settings.site_name);
+      }
+      if (settings.tagline) {
+        setTagline(settings.tagline);
+      }
+    } catch (error) {
+      console.error("Error loading brand settings:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
@@ -15,10 +38,10 @@ export default function HomePage() {
         <section className="relative bg-gradient-to-br from-[#3d5a43] to-[#2a3d32] text-white py-24">
           <div className="container text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 uppercase tracking-wide">
-              Rybník Ostrata
+              {siteName}
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-100">
-              Kaprový rybník v Novém Veselí
+              {tagline}
             </p>
             <Link href="/rezervace">
               <Button size="lg" className="bg-white text-[#3d5a43] hover:bg-gray-100 text-lg px-8 py-6 font-bold uppercase tracking-wider">
@@ -74,7 +97,7 @@ export default function HomePage() {
             </h2>
             <div className="prose max-w-none text-gray-700">
               <p className="text-lg leading-relaxed">
-                Rybník Ostrata v Novém Veselí nabízí 14 lovných míst s možností rezervace online. 
+                {siteName} nabízí 14 lovných míst s možností rezervace online. 
                 Každé místo má 2 pozice pro rybáře. Ideální pro kaprový rybolov v příjemném prostředí.
               </p>
             </div>

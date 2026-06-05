@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { getBrandSettings } from "@/lib/brandService";
 
 interface MenuItem {
   slug: string;
@@ -13,10 +14,23 @@ interface MenuItem {
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [siteName, setSiteName] = useState("Rybník Ostrata");
 
   useEffect(() => {
     loadMenuItems();
+    loadBrandSettings();
   }, []);
+
+  const loadBrandSettings = async () => {
+    try {
+      const settings = await getBrandSettings();
+      if (settings.site_name) {
+        setSiteName(settings.site_name);
+      }
+    } catch (error) {
+      console.error("Error loading brand settings:", error);
+    }
+  };
 
   const loadMenuItems = async () => {
     try {
@@ -47,7 +61,7 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center">
             <span className="text-2xl font-bold text-[#2a3d32] uppercase tracking-wider">
-              Rybník Ostrata
+              {siteName}
             </span>
           </Link>
 

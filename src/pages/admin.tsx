@@ -85,6 +85,7 @@ export default function AdminPage() {
   const [spotAvailability, setSpotAvailability] = useState<any[]>([]);
   const [spotPositions, setSpotPositions] = useState<any[]>([]);
   const [mapImageUrl, setMapImageUrl] = useState<string>("/Mapa-Rybnik-Ostrata-scaled.jpg");
+  const [siteName, setSiteName] = useState("Rybník Ostrata");
   const { toast } = useToast();
 
   const handlePinSubmit = (e: React.FormEvent) => {
@@ -93,9 +94,22 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       setPinError(false);
       fetchReservations();
+      loadBrandSettings();
     } else {
       setPinError(true);
       setPinInput("");
+    }
+  };
+
+  const loadBrandSettings = async () => {
+    try {
+      const { getBrandSettings } = await import("@/lib/brandService");
+      const settings = await getBrandSettings();
+      if (settings.site_name) {
+        setSiteName(settings.site_name);
+      }
+    } catch (error) {
+      console.error("Error loading brand settings:", error);
     }
   };
 
@@ -408,7 +422,7 @@ export default function AdminPage() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold mb-2">Admin panel</h1>
-              <p className="text-muted-foreground text-lg">Správa rezervací rybníku soukromák</p>
+              <p className="text-muted-foreground text-lg">Správa rezervací {siteName}</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
