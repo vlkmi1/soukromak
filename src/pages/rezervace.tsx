@@ -38,11 +38,30 @@ export default function ReservationPage() {
   const [allCombinations, setAllCombinations] = useState<SpotCombination[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [dayAvailabilities, setDayAvailabilities] = useState<DayAvailability[]>([]);
+  const [currentAvailability, setCurrentAvailability] = useState<any[]>([]);
 
   // Načíst dostupnost pro všechny nadcházející dny (30 dní dopředu)
   useEffect(() => {
     loadDayAvailabilities();
   }, []);
+
+  // Načíst dostupnost pro vybrané datum (pro zobrazení na mapě)
+  useEffect(() => {
+    const dateRange = getDateRange();
+    if (dateRange) {
+      loadCurrentAvailability(dateRange.from, dateRange.to);
+    }
+  }, [selectedDates]);
+
+  const loadCurrentAvailability = async (startDate: Date, endDate: Date) => {
+    try {
+      const availability = await getSpotAvailability(startDate, endDate);
+      setCurrentAvailability(availability);
+    } catch (error) {
+      console.error("Error loading availability:", error);
+      setCurrentAvailability([]);
+    }
+  };
 
   const loadDayAvailabilities = async () => {
     const today = startOfDay(new Date());
@@ -230,7 +249,7 @@ export default function ReservationPage() {
                 <PondMap
                   selectedSpots={selectedSpot}
                   onSpotSelect={handleSpotSelect}
-                  availability={[]}
+                  availability={currentAvailability}
                 />
               </div>
             </div>
