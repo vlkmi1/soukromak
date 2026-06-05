@@ -1,7 +1,7 @@
 # Rezervační systém Rybník Ostrata
 
 ## Vize
-Webová aplikace pro rezervaci lovných míst na rybníku Ostrata. Umožňuje rybářům intuitivně vybrat místo přímo na interaktivní mapě rybníku a provádět rezervace online. Správci spravují rezervace přes admin rozhraní.
+Webová aplikace pro rezervaci lovných míst na rybníku. Umožňuje rybářům intuitivně vybrat místo přímo na interaktivní mapě rybníku a provádět rezervace online. Správci spravují rezervace přes admin rozhraní.
 
 ## Design
 Design vychází z webu rybnikostrata.cz:
