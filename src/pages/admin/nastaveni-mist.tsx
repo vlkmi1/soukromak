@@ -7,19 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
-import { Upload, Plus, Trash2, Save, X, Move } from "lucide-react";
+import { Upload, Save, X } from "lucide-react";
 
 interface SpotPosition {
   id?: number;
-  spot_number: number;
+  number: number;
   x_position: number;
   y_position: number;
-  is_active: boolean;
-}
-
-interface PondSettings {
-  id: number;
-  image_url: string;
 }
 
 export default function MapSettingsPage() {
@@ -29,7 +23,7 @@ export default function MapSettingsPage() {
   const [pin, setPin] = useState("");
   
   const [spots, setSpots] = useState<SpotPosition[]>([]);
-  const [pondSettings, setPondSettings] = useState<PondSettings | null>(null);
+  const [mapImageId, setMapImageId] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,29 +55,28 @@ export default function MapSettingsPage() {
 
   const loadSettings = async () => {
     try {
-      // Načíst nastavení rybníku
-      const { data: settings, error: settingsError } = await supabase
-        .from("pond_settings")
+      // Načíst URL obrázku
+      const { data: mapData, error: mapError } = await supabase
+        .from("map_image")
         .select("*")
         .order("id", { ascending: false })
         .limit(1)
         .single();
 
-      if (settingsError) throw settingsError;
+      if (!mapError && mapData) {
+        setMapImageId(mapData.id);
+        setImageUrl(mapData.image_url);
+      }
 
-      setPondSettings(settings);
-      setImageUrl(settings.image_url);
-
-      // Načíst pozice míst
-      const { data: positions, error: positionsError } = await supabase
-        .from("spot_positions")
+      // Načíst pozice míst z fishing_spots
+      const { data: spotsData, error: spotsError } = await supabase
+        .from("fishing_spots")
         .select("*")
-        .eq("pond_settings_id", settings.id)
-        .order("spot_number");
+        .order("number");
 
-      if (positionsError) throw positionsError;
+      if (spotsError) throw spotsError;
 
-      setSpots(positions || []);
+      setSpots(spotsData || []);
     } catch (error) {
       console.error("Error loading settings:", error);
       setMessage({ type: "error", text: "Chyba při načítání nastavení" });
@@ -96,7 +89,6 @@ export default function MapSettingsPage() {
 
     setUploading(true);
     try {
-      // Vytvořit data URL pro okamžitý náhled
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
@@ -104,9 +96,6 @@ export default function MapSettingsPage() {
         setMessage({ type: "success", text: "Obrázek byl načten. Nezapomeňte uložit nastavení!" });
       };
       reader.readAsDataURL(file);
-      
-      // Pro produkci by se obrázek nahrál na server/CDN
-      // Nyní ukládáme jako data URL přímo do databáze
     } catch (error) {
       console.error("Error uploading image:", error);
       setMessage({ type: "error", text: "Chyba při načítání obrázku" });
@@ -122,15 +111,14 @@ export default function MapSettingsPage() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    const nextSpotNumber = spots.length > 0 
-      ? Math.max(...spots.map(s => s.spot_number)) + 1 
+    const nextNumber = spots.length > 0 
+      ? Math.max(...spots.map(s => s.number)) + 1 
       : 1;
 
     setSpots([...spots, {
-      spot_number: nextSpotNumber,
+      number: nextNumber,
       x_position: Math.round(x * 100) / 100,
       y_position: Math.round(y * 100) / 100,
-      is_active: true,
     }]);
   };
 
@@ -147,7 +135,7 @@ export default function MapSettingsPage() {
       const y = ((moveEvent.clientY - rect.top) / rect.height) * 100;
 
       setSpots(prev => prev.map(spot => 
-        spot.spot_number === spotNumber
+        spot.number === spotNumber
           ? { ...spot, x_position: Math.round(x * 100) / 100, y_position: Math.round(y * 100) / 100 }
           : spot
       ));
@@ -165,56 +153,67 @@ export default function MapSettingsPage() {
   };
 
   const handleDeleteSpot = (spotNumber: number) => {
-    setSpots(prev => prev.filter(s => s.spot_number !== spotNumber));
+    setSpots(prev => prev.filter(s => s.number !== spotNumber));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Uložit nebo aktualizovat pond_settings
-      let settingsId = pondSettings?.id;
-      
-      if (pondSettings) {
-        // Update existující
-        const { error } = await supabase
-          .from("pond_settings")
+      // Uložit URL obrázku
+      if (mapImageId) {
+        await supabase
+          .from("map_image")
           .update({ image_url: imageUrl, updated_at: new Date().toISOString() })
-          .eq("id", pondSettings.id);
-        
-        if (error) throw error;
+          .eq("id", mapImageId);
       } else {
-        // Insert nový
         const { data, error } = await supabase
-          .from("pond_settings")
+          .from("map_image")
           .insert({ image_url: imageUrl })
           .select()
           .single();
         
-        if (error) throw error;
-        settingsId = data.id;
-        setPondSettings(data);
+        if (!error && data) {
+          setMapImageId(data.id);
+        }
       }
 
-      // Smazat staré pozice a vložit nové
-      if (settingsId) {
-        await supabase
-          .from("spot_positions")
-          .delete()
-          .eq("pond_settings_id", settingsId);
+      // Smazat všechna stará místa
+      await supabase.from("fishing_spots").delete().neq("id", 0);
 
-        const positions = spots.map(spot => ({
-          pond_settings_id: settingsId,
-          spot_number: spot.spot_number,
-          x_position: spot.x_position,
-          y_position: spot.y_position,
-          is_active: spot.is_active,
-        }));
+      // Vložit nová místa
+      const spotsToInsert = spots.map(spot => ({
+        number: spot.number,
+        x_position: spot.x_position,
+        y_position: spot.y_position,
+      }));
 
-        const { error } = await supabase
-          .from("spot_positions")
-          .insert(positions);
+      const { error: insertError } = await supabase
+        .from("fishing_spots")
+        .insert(spotsToInsert);
 
-        if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Pro každé místo vytvořit 2 pozice (pro 2 rybáře)
+      await supabase.from("spot_positions").delete().neq("id", 0);
+      
+      const positionsToInsert: any[] = [];
+      for (const spot of spots) {
+        const { data: spotData } = await supabase
+          .from("fishing_spots")
+          .select("id")
+          .eq("number", spot.number)
+          .single();
+        
+        if (spotData) {
+          positionsToInsert.push(
+            { spot_id: spotData.id, position_number: 1 },
+            { spot_id: spotData.id, position_number: 2 }
+          );
+        }
+      }
+
+      if (positionsToInsert.length > 0) {
+        await supabase.from("spot_positions").insert(positionsToInsert);
       }
 
       setMessage({ type: "success", text: "Nastavení bylo úspěšně uloženo" });
@@ -285,7 +284,6 @@ export default function MapSettingsPage() {
                   <h2 className="text-lg font-bold text-[#2a3d32] uppercase tracking-wide">Editor mapy</h2>
                 </div>
                 <div className="p-6">
-                  {/* Upload obrázku */}
                   <div className="mb-6">
                     <Label htmlFor="image-upload" className="uppercase text-sm tracking-wide mb-2 block">
                       Nahrát mapu rybníku
@@ -305,7 +303,6 @@ export default function MapSettingsPage() {
                     </div>
                   </div>
 
-                  {/* Interaktivní mapa */}
                   {imageUrl && (
                     <div 
                       ref={containerRef}
@@ -321,31 +318,30 @@ export default function MapSettingsPage() {
                         draggable={false}
                       />
                       
-                      {/* Puntíky lovných míst */}
                       {spots.map((spot) => (
                         <div
-                          key={spot.spot_number}
+                          key={spot.number}
                           className={`absolute cursor-move transform -translate-x-1/2 -translate-y-1/2 ${
-                            draggedSpot === spot.spot_number ? "z-50" : "z-10"
+                            draggedSpot === spot.number ? "z-50" : "z-10"
                           }`}
                           style={{
                             left: `${spot.x_position}%`,
                             top: `${spot.y_position}%`,
                           }}
-                          onMouseDown={(e) => handleSpotDrag(e, spot.spot_number)}
+                          onMouseDown={(e) => handleSpotDrag(e, spot.number)}
                         >
                           <div className="relative group">
                             <div className={`w-8 h-8 rounded-full border-3 border-white shadow-lg flex items-center justify-center text-xs font-bold text-white transition-all ${
-                              draggedSpot === spot.spot_number 
+                              draggedSpot === spot.number 
                                 ? "bg-blue-600 scale-125" 
                                 : "bg-[#3d5a43] hover:scale-110"
                             }`}>
-                              {spot.spot_number}
+                              {spot.number}
                             </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteSpot(spot.spot_number);
+                                handleDeleteSpot(spot.number);
                               }}
                               className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                             >
@@ -364,9 +360,8 @@ export default function MapSettingsPage() {
               </div>
             </div>
 
-            {/* Sidebar s ovládáním */}
+            {/* Sidebar */}
             <div className="space-y-6">
-              {/* Seznam míst */}
               <div className="bg-white border border-gray-300 overflow-hidden">
                 <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
                   <h3 className="text-lg font-bold text-[#2a3d32] uppercase tracking-wide">
@@ -381,22 +376,22 @@ export default function MapSettingsPage() {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {spots.sort((a, b) => a.spot_number - b.spot_number).map((spot) => (
+                      {spots.sort((a, b) => a.number - b.number).map((spot) => (
                         <div
-                          key={spot.spot_number}
+                          key={spot.number}
                           className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200"
                         >
                           <div>
-                            <span className="font-bold text-[#2a3d32]">Místo #{spot.spot_number}</span>
+                            <span className="font-bold text-[#2a3d32]">Místo #{spot.number}</span>
                             <div className="text-xs text-gray-500">
                               X: {spot.x_position.toFixed(1)}%, Y: {spot.y_position.toFixed(1)}%
                             </div>
                           </div>
                           <button
-                            onClick={() => handleDeleteSpot(spot.spot_number)}
+                            onClick={() => handleDeleteSpot(spot.number)}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <X className="h-4 w-4" />
                           </button>
                         </div>
                       ))}
@@ -405,7 +400,6 @@ export default function MapSettingsPage() {
                 </div>
               </div>
 
-              {/* Akce */}
               <div className="space-y-3">
                 <Button
                   onClick={handleSave}

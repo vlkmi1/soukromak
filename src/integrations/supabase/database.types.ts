@@ -39,6 +39,27 @@ export type Database = {
         }
         Relationships: []
       }
+      map_image: {
+        Row: {
+          created_at: string | null
+          id: number
+          image_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          image_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          image_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

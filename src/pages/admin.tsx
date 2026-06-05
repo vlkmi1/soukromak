@@ -215,38 +215,34 @@ export default function AdminPage() {
 
   const loadSpotPositions = async () => {
     try {
-      // Načíst nastavení rybníku
-      const { data: settings, error: settingsError } = await supabase
-        .from("pond_settings")
+      // Načíst URL obrázku
+      const { data: mapData, error: mapError } = await supabase
+        .from("map_image")
         .select("*")
         .order("id", { ascending: false })
         .limit(1)
         .single();
 
-      if (settingsError) {
-        console.warn("Using default map settings");
+      if (!mapError && mapData) {
+        setMapImageUrl(mapData.image_url);
+      }
+
+      // Načíst pozice míst z fishing_spots
+      const { data: spots, error: spotsError } = await supabase
+        .from("fishing_spots")
+        .select("*")
+        .order("number");
+
+      if (spotsError || !spots || spots.length === 0) {
         setDefaultSpotPositions();
         return;
       }
 
-      if (settings) {
-        setMapImageUrl(settings.image_url);
-
-        // Načíst pozice míst
-        const { data: positions, error: positionsError } = await supabase
-          .from("spot_positions")
-          .select("*")
-          .eq("pond_settings_id", settings.id)
-          .eq("is_active", true)
-          .order("spot_number");
-
-        if (positionsError || !positions || positions.length === 0) {
-          setDefaultSpotPositions();
-          return;
-        }
-
-        setSpotPositions(positions);
-      }
+      setSpotPositions(spots.map(s => ({
+        spot_number: s.number,
+        x_position: s.x_position,
+        y_position: s.y_position,
+      })));
     } catch (error) {
       console.error("Error loading spot positions:", error);
       setDefaultSpotPositions();
