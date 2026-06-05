@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, CheckCircle, XCircle, Clock, DollarSign, Users, RefreshCw, ChevronLeft, ChevronRight, Lock, MapPin, Phone, Palette } from "lucide-react";
+import { Calendar, MapPin, Eye, DollarSign, XCircle, CheckCircle, Clock, Palette } from "lucide-react";
+import { FileEdit, Image as ImageIcon } from "lucide-react";
 import { format, addDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { cs } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
@@ -409,19 +410,63 @@ export default function AdminPage() {
               <h1 className="text-4xl font-bold mb-2">Admin panel</h1>
               <p className="text-muted-foreground text-lg">Správa rezervací rybníku Ostrata</p>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={() => router.push("/admin/nastaveni-mist")} variant="outline" size="lg">
-                <MapPin className="mr-2 h-4 w-4" />
-                Nastavení míst
-              </Button>
-              <Button onClick={() => router.push("/admin/nastaveni-brandu")} variant="outline" size="lg">
-                <Palette className="mr-2 h-4 w-4" />
-                Nastavení brandu
-              </Button>
-              <Button onClick={fetchReservations} variant="outline" size="lg">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Obnovit
-              </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <button
+                onClick={() => setActiveView("reservations")}
+                className={`p-6 border-2 text-left transition-all ${
+                  activeView === "reservations"
+                    ? "bg-[#3d5a43] text-white border-[#3d5a43]"
+                    : "bg-white border-gray-300 hover:border-[#3d5a43]"
+                }`}
+              >
+                <Calendar className="h-12 w-12 mb-4" />
+                <h2 className="text-xl font-bold uppercase tracking-wide">Rezervace</h2>
+                <p className="text-sm mt-2 opacity-90">Správa všech rezervací</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/nastaveni-mist")}
+                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+              >
+                <MapPin className="h-12 w-12 mb-4 text-[#2a3d32]" />
+                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                  Nastavení míst
+                </h2>
+                <p className="text-sm mt-2 text-gray-600">Editor pozic lovných míst</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/nastaveni-brandu")}
+                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+              >
+                <Palette className="h-12 w-12 mb-4 text-[#2a3d32]" />
+                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                  Nastavení brandu
+                </h2>
+                <p className="text-sm mt-2 text-gray-600">Barvy, fonty, kontakt</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/editor")}
+                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+              >
+                <FileEdit className="h-12 w-12 mb-4 text-[#2a3d32]" />
+                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                  Editor stránek
+                </h2>
+                <p className="text-sm mt-2 text-gray-600">Správa článků a obsahu</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/galerie")}
+                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+              >
+                <ImageIcon className="h-12 w-12 mb-4 text-[#2a3d32]" />
+                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                  Fotogalerie
+                </h2>
+                <p className="text-sm mt-2 text-gray-600">Upload a správa fotek</p>
+              </button>
             </div>
           </div>
 

@@ -1,106 +1,105 @@
-import Link from "next/link";
-import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getBrandSettings, type BrandSettings } from "@/lib/brandService";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+interface MenuItem {
+  slug: string;
+  title: string;
+  menu_order: number;
+}
 
 export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [brand, setBrand] = useState<BrandSettings | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
   useEffect(() => {
-    getBrandSettings().then(setBrand);
+    loadMenuItems();
   }, []);
 
-  const siteName = brand?.site_name || "RYBNÍK OSTRATA";
+  const loadMenuItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("pages")
+        .select("slug, title, menu_order")
+        .eq("published", true)
+        .eq("display_in_menu", true)
+        .order("menu_order", { ascending: true });
+
+      if (error) throw error;
+      setMenuItems(data || []);
+    } catch (error) {
+      console.error("Error loading menu items:", error);
+      // Fallback - defaultní menu
+      setMenuItems([
+        { slug: "o-rybniku", title: "O rybníku", menu_order: 1 },
+        { slug: "pravidla", title: "Pravidla", menu_order: 2 },
+        { slug: "fotogalerie", title: "Fotogalerie", menu_order: 3 },
+        { slug: "kontakt", title: "Kontakt", menu_order: 4 },
+      ]);
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#3d5a43] text-white shadow-md">
+    <header className="bg-white border-b-2 border-gray-300 sticky top-0 z-40">
       <div className="container">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo a název */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            {brand?.logo_url ? (
-              <img src={brand.logo_url} alt={siteName} className="h-10 w-auto" />
-            ) : (
-              <>
-                <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.46-4.44 6-8 6s-7.06-2.54-8-6z" />
-                  <path d="M18 5L22 9" />
-                  <path d="M2 9L6 5" />
-                  <circle cx="12" cy="12" r="1" fill="currentColor" />
-                </svg>
-                <span className="text-xl font-bold tracking-wider uppercase">
-                  {siteName}
-                </span>
-              </>
-            )}
+        <div className="flex items-center justify-between h-20">
+          <Link href="/" className="flex items-center">
+            <span className="text-2xl font-bold text-[#2a3d32] uppercase tracking-wider">
+              Rybník Ostrata
+            </span>
           </Link>
 
-          {/* Desktop Navigation - vše uppercase */}
-          <nav className="hidden lg:flex items-center gap-8">
-            <Link href="/" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Aktuality
-            </Link>
-            <Link href="/#o-nas" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              O nás
-            </Link>
-            <Link href="/rezervace" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Rezervace
-            </Link>
-            <Link href="/#informace" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Informace
-            </Link>
-            <Link href="/#zavody" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Závody
-            </Link>
-            <Link href="/#foto" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Foto
-            </Link>
-            <Link href="/#kontakt" className="text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Kontakt
-            </Link>
-            <Link href="/admin" className="text-sm font-bold tracking-wider text-white/60 hover:text-white/40 transition-colors uppercase">
-              Admin
+          {/* Desktop menu */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {menuItems.map((item) => (
+              <Link
+                key={item.slug}
+                href={`/${item.slug}`}
+                className="text-[#2a3d32] hover:text-[#3d5a43] font-semibold uppercase tracking-wide text-sm transition-colors"
+              >
+                {item.title}
+              </Link>
+            ))}
+            <Link href="/rezervace">
+              <Button className="bg-[#3d5a43] hover:bg-[#4a6850] text-white font-bold uppercase tracking-wider">
+                Rezervace
+              </Button>
             </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden text-white hover:bg-white/10"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden text-[#2a3d32]"
+            aria-label="Menu"
           >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </Button>
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="lg:hidden py-6 border-t border-white/10 space-y-4">
-            <Link href="/" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Aktuality
-            </Link>
-            <Link href="/#o-nas" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              O nás
-            </Link>
-            <Link href="/rezervace" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Rezervace
-            </Link>
-            <Link href="/#informace" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Informace
-            </Link>
-            <Link href="/#zavody" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Závody
-            </Link>
-            <Link href="/#foto" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Foto
-            </Link>
-            <Link href="/#kontakt" className="block text-sm font-bold tracking-wider text-white hover:text-white/80 transition-colors uppercase">
-              Kontakt
-            </Link>
-          </nav>
+        {/* Mobile menu */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200">
+            <nav className="flex flex-col space-y-4">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/${item.slug}`}
+                  className="text-[#2a3d32] hover:text-[#3d5a43] font-semibold uppercase tracking-wide text-sm"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.title}
+                </Link>
+              ))}
+              <Link href="/rezervace" onClick={() => setIsMenuOpen(false)}>
+                <Button className="bg-[#3d5a43] hover:bg-[#4a6850] text-white font-bold uppercase tracking-wider w-full">
+                  Rezervace
+                </Button>
+              </Link>
+            </nav>
+          </div>
         )}
       </div>
     </header>
