@@ -1,20 +1,40 @@
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getBrandSettings, type BrandSettings } from "@/lib/brandService";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [brand, setBrand] = useState<BrandSettings | null>(null);
+
+  useEffect(() => {
+    getBrandSettings().then(setBrand);
+  }, []);
+
+  const siteName = brand?.site_name || "RYBNÍK OSTRATA";
 
   return (
-    <header className="bg-[#3d5a43] text-white">
+    <header className="sticky top-0 z-50 bg-[#3d5a43] text-white shadow-md">
       <div className="container">
-        <div className="flex h-20 items-center justify-between">
-          {/* Logo - jednoduchý text uppercase */}
-          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <div className="text-2xl font-bold tracking-wide">
-              RYBNÍK<br/>OSTRATA
-            </div>
+        <div className="flex items-center justify-between h-16">
+          {/* Logo a název */}
+          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            {brand?.logo_url ? (
+              <img src={brand.logo_url} alt={siteName} className="h-10 w-auto" />
+            ) : (
+              <>
+                <svg className="h-10 w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.46-4.44 6-8 6s-7.06-2.54-8-6z" />
+                  <path d="M18 5L22 9" />
+                  <path d="M2 9L6 5" />
+                  <circle cx="12" cy="12" r="1" fill="currentColor" />
+                </svg>
+                <span className="text-xl font-bold tracking-wider uppercase">
+                  {siteName}
+                </span>
+              </>
+            )}
           </Link>
 
           {/* Desktop Navigation - vše uppercase */}
