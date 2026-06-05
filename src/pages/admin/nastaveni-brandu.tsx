@@ -188,7 +188,7 @@ export default function BrandSettingsPage() {
                       id="site_name"
                       value={brand.site_name}
                       onChange={(e) => updateField("site_name", e.target.value)}
-                      placeholder="Rybník Ostrata"
+                      placeholder="Rybník soukromák"
                     />
                   </div>
                   
@@ -353,7 +353,7 @@ export default function BrandSettingsPage() {
                       ))}
                     </select>
                     <p className="text-sm" style={{ fontFamily: brand.font_body }}>
-                      Ukázka běžného textu. Rybník Ostrata je kaprový rybník v Novém Veselí.
+                      Ukázka běžného textu. Rybník soukromák je kaprový rybník v Novém Veselí.
                     </p>
                   </div>
                 </div>
@@ -384,7 +384,7 @@ export default function BrandSettingsPage() {
                       type="email"
                       value={brand.contact_email}
                       onChange={(e) => updateField("contact_email", e.target.value)}
-                      placeholder="info@rybnikostrata.cz"
+                      placeholder="info@soukromak.cz"
                     />
                   </div>
 
@@ -415,7 +415,7 @@ export default function BrandSettingsPage() {
                       id="social_facebook"
                       value={brand.social_facebook || ""}
                       onChange={(e) => updateField("social_facebook", e.target.value)}
-                      placeholder="https://www.facebook.com/rybnikostrata"
+                      placeholder="https://www.facebook.com/soukromak"
                     />
                   </div>
 
@@ -425,7 +425,7 @@ export default function BrandSettingsPage() {
                       id="social_instagram"
                       value={brand.social_instagram || ""}
                       onChange={(e) => updateField("social_instagram", e.target.value)}
-                      placeholder="https://www.instagram.com/rybnikostrata"
+                      placeholder="https://www.instagram.com/soukromak"
                     />
                   </div>
                 </div>
