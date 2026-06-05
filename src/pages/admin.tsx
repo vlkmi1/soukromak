@@ -16,7 +16,6 @@ import { cs } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/pricing";
-import { useRouter } from "next/navigation";
 
 type ReservationStatus = "new" | "confirmed" | "paid" | "cancelled";
 

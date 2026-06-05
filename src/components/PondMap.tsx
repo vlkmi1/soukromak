@@ -36,7 +36,7 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
 
       if (settingsError) {
         console.warn("Using default pond settings:", settingsError);
-        useDefaultPositions();
+        setDefaultPositions();
         return;
       }
 
@@ -53,7 +53,7 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
 
         if (positionsError) {
           console.warn("Using default spot positions:", positionsError);
-          useDefaultPositions();
+          setDefaultPositions();
           return;
         }
 
@@ -66,18 +66,18 @@ export function PondMap({ selectedSpots, onSpotSelect, availability }: PondMapPr
             }))
           );
         } else {
-          useDefaultPositions();
+          setDefaultPositions();
         }
       }
     } catch (error) {
       console.error("Error loading pond settings:", error);
-      useDefaultPositions();
+      setDefaultPositions();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const useDefaultPositions = () => {
+  const setDefaultPositions = () => {
     // Defaultní pozice jako záložní řešení
     setSpotPositions([
       { number: 1, x: 82, y: 42 },
