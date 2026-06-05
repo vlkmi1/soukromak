@@ -102,6 +102,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: number
+          image_url: string
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: number
+          image_url: string
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: number
+          image_url?: string
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       map_image: {
         Row: {
           created_at: string | null
@@ -119,6 +149,48 @@ export type Database = {
           created_at?: string | null
           id?: number
           image_url?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pages: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          display_in_menu: boolean | null
+          excerpt: string | null
+          featured_image: string | null
+          id: number
+          menu_order: number | null
+          published: boolean | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          display_in_menu?: boolean | null
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: number
+          menu_order?: number | null
+          published?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          display_in_menu?: boolean | null
+          excerpt?: string | null
+          featured_image?: string | null
+          id?: number
+          menu_order?: number | null
+          published?: boolean | null
+          slug?: string
+          title?: string
           updated_at?: string | null
         }
         Relationships: []
