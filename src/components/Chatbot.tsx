@@ -40,7 +40,7 @@ export function Chatbot() {
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      addBotMessage("Dobrý den! 👋 Jsem váš asistent pro rezervace na rybníku Ostrata. Rád vám pomohu najít volné místo.");
+      addBotMessage("Dobrý den! 👋 Jsem váš asistent pro rezervace na rybníku soukromák. Rád vám pomohu najít volné místo.");
       setTimeout(() => {
         addBotMessage("Kdy byste chtěli přijet rybařit? Klikněte na tlačítko níže pro výběr data.");
         setState("asking_dates");
