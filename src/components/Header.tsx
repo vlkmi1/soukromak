@@ -14,7 +14,7 @@ interface MenuItem {
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [siteName, setSiteName] = useState("Rybník Ostrata");
+  const [siteName, setSiteName] = useState("Rybník soukromák");
 
   useEffect(() => {
     loadMenuItems();
