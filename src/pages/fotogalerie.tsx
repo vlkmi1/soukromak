@@ -110,15 +110,25 @@ export default function GalleryPage({ images }: GalleryPageProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const { data: images } = await supabase
-    .from("gallery")
-    .select("*")
-    .order("display_order", { ascending: true });
+  try {
+    const { data: images } = await supabase
+      .from("gallery")
+      .select("*")
+      .order("display_order", { ascending: true });
 
-  return {
-    props: {
-      images: images || [],
-    },
-    revalidate: 60,
-  };
+    return {
+      props: {
+        images: images || [],
+      },
+      revalidate: 60,
+    };
+  } catch (error) {
+    console.error("Error loading gallery:", error);
+    return {
+      props: {
+        images: [],
+      },
+      revalidate: 60,
+    };
+  }
 };

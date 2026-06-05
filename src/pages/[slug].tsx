@@ -61,22 +61,10 @@ export default function DynamicPage({ page }: PageProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const { data: pages } = await supabase
-    .from("pages")
-    .select("slug")
-    .eq("published", true);
-
-  // Vyloučit stránky s vlastními dedikovanými soubory
-  const excludedSlugs = ["fotogalerie", "rezervace", "admin"];
-  
-  const paths = (pages || [])
-    .filter(page => !excludedSlugs.includes(page.slug))
-    .map((page) => ({
-      params: { slug: page.slug },
-    }));
-
+  // Vercel build: Don't query database at build time
+  // Pages will be generated on-demand with fallback: 'blocking'
   return {
-    paths,
+    paths: [],
     fallback: "blocking",
   };
 };
