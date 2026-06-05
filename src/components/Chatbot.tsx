@@ -20,7 +20,7 @@ type ConversationState = "greeting" | "asking_dates" | "asking_count" | "asking_
 
 export function Chatbot() {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true); // Automaticky rozbaleno při načtení
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [state, setState] = useState<ConversationState>("greeting");
   const [userInput, setUserInput] = useState("");
@@ -177,7 +177,10 @@ export function Chatbot() {
           className="fixed bottom-6 right-6 bg-[#3d5a43] hover:bg-[#4a6850] text-white rounded-full p-4 shadow-lg transition-all z-50 flex items-center gap-2"
           aria-label="Otevřít chatbota"
         >
-          <MessageCircle className="h-6 w-6" />
+          <div className="relative">
+            <MessageCircle className="h-6 w-6" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
+          </div>
           <span className="font-semibold">Potřebujete pomoc?</span>
         </button>
       )}
@@ -188,8 +191,17 @@ export function Chatbot() {
           {/* Header */}
           <div className="bg-[#3d5a43] text-white px-4 py-3 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              <span className="font-bold">Rezervační asistent</span>
+              <div className="relative">
+                <MessageCircle className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
+              </div>
+              <div>
+                <span className="font-bold block">Rezervační asistent</span>
+                <span className="text-xs text-green-200 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                  Online
+                </span>
+              </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
