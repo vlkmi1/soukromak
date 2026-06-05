@@ -1,20 +1,84 @@
-import { GetStaticPaths, GetStaticProps } from "next";
+import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Chatbot } from "@/components/Chatbot";
 import { supabase } from "@/lib/supabase";
 import { SEO } from "@/components/SEO";
 
-interface PageProps {
-  page: {
-    title: string;
-    content: string;
-    excerpt: string;
-    featured_image: string | null;
-  };
+interface PageData {
+  title: string;
+  content: string;
+  excerpt: string;
+  featured_image: string | null;
 }
 
-export default function DynamicPage({ page }: PageProps) {
+export default function DynamicPage() {
+  const router = useRouter();
+  const { slug } = router.query;
+  const [page, setPage] = useState<PageData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (!slug) return;
+    
+    loadPage(slug as string);
+  }, [slug]);
+
+  const loadPage = async (pageSlug: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("pages")
+        .select("title, content, excerpt, featured_image")
+        .eq("slug", pageSlug)
+        .eq("published", true)
+        .single();
+
+      if (error || !data) {
+        setNotFound(true);
+      } else {
+        setPage(data);
+      }
+    } catch (error) {
+      console.error("Error loading page:", error);
+      setNotFound(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-lg text-gray-600">Načítám stránku...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (notFound || !page) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Header />
+        <main className="flex-1 flex flex-col items-center justify-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
+          <p className="text-lg text-gray-600 mb-8">Stránka nebyla nalezena</p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-6 py-3 bg-[#3d5a43] text-white rounded-lg hover:bg-[#4a6850] transition-colors"
+          >
+            Zpět na hlavní stránku
+          </button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <SEO
@@ -59,43 +123,3 @@ export default function DynamicPage({ page }: PageProps) {
     </div>
   );
 }
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  // Vercel build: Don't query database at build time
-  // Pages will be generated on-demand with fallback: 'blocking'
-  return {
-    paths: [],
-    fallback: "blocking",
-  };
-};
-
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  try {
-    const slug = params?.slug as string;
-
-    const { data: page, error } = await supabase
-      .from("pages")
-      .select("title, content, excerpt, featured_image")
-      .eq("slug", slug)
-      .eq("published", true)
-      .single();
-
-    if (error || !page) {
-      return {
-        notFound: true,
-      };
-    }
-
-    return {
-      props: {
-        page,
-      },
-      revalidate: 60,
-    };
-  } catch (error) {
-    console.error("Error in getStaticProps:", error);
-    return {
-      notFound: true,
-    };
-  }
-};
