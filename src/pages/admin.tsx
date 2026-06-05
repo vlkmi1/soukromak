@@ -74,12 +74,16 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
   const [groupedReservations, setGroupedReservations] = useState<GroupedReservation[]>([]);
-  const [filteredReservations, setFilteredReservations] = useState<GroupedReservation[]>([]);
+  const [filteredReservations, setFilteredReservations] = useState<any[]>([]);
   const [activeFilter, setActiveFilter] = useState<ReservationStatus | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [occupancyDate, setOccupancyDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [spotAvailability, setSpotAvailability] = useState<any[]>([]);
+  const [spotPositions, setSpotPositions] = useState<any[]>([]);
+  const [mapImageUrl, setMapImageUrl] = useState<string>("/Mapa-Rybnik-Ostrata-scaled.jpg");
   const { toast } = useToast();
 
   const handlePinSubmit = (e: React.FormEvent) => {
@@ -205,6 +209,64 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
+    checkAuth();
+    fetchReservations();
+    loadSpotPositions();
+  }, []);
+
+  const loadSpotPositions = async () => {
+    try {
+      // Načíst nastavení rybníku
+      const { data: settings, error: settingsError } = await supabase
+        .from("pond_settings")
+        .select("*")
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (settingsError) {
+        console.warn("Using default map settings");
+        setDefaultSpotPositions();
+        return;
+      }
+
+      if (settings) {
+        setMapImageUrl(settings.image_url);
+
+        // Načíst pozice míst
+        const { data: positions, error: positionsError } = await supabase
+          .from("spot_positions")
+          .select("*")
+          .eq("pond_settings_id", settings.id)
+          .eq("is_active", true)
+          .order("spot_number");
+
+        if (positionsError || !positions || positions.length === 0) {
+          setDefaultSpotPositions();
+          return;
+        }
+
+        setSpotPositions(positions);
+      }
+    } catch (error) {
+      console.error("Error loading spot positions:", error);
+      setDefaultSpotPositions();
+    }
+  };
+
+  const setDefaultSpotPositions = () => {
+    const defaultPositions = [];
+    for (let i = 1; i <= 14; i++) {
+      defaultPositions.push({
+        spot_number: i,
+        x_position: 50 + (i - 7.5) * 3,
+        y_position: 50,
+      });
+    }
+    setSpotPositions(defaultPositions);
+  };
+
+  useEffect(() => {
     if (activeFilter === "all") {
       setFilteredReservations(groupedReservations.filter((reservation) => {
         return reservation.status !== "cancelled";
@@ -257,6 +319,41 @@ export default function AdminPage() {
   const occupancy = getOccupancyForDate(occupancyDate);
   const isToday = format(occupancyDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
   const isTomorrow = format(occupancyDate, "yyyy-MM-dd") === format(addDays(new Date(), 1), "yyyy-MM-dd");
+
+  useEffect(() => {
+    calculateSpotAvailability();
+  }, [selectedDate, reservations]);
+
+  const calculateSpotAvailability = () => {
+    const start = startOfDay(selectedDate);
+    const end = endOfDay(selectedDate);
+
+    const availability: any[] = [];
+    
+    for (let spotNum = 1; spotNum <= 14; spotNum++) {
+      const occupiedPositions = new Set<number>();
+      
+      reservations.forEach((res) => {
+        if (res.spot_id === spotNum && ["new", "confirmed", "paid"].includes(res.status)) {
+          const resStart = startOfDay(new Date(res.start_date));
+          const resEnd = startOfDay(new Date(res.end_date));
+          
+          if (resStart <= end && resEnd >= start) {
+            occupiedPositions.add(res.position_id);
+          }
+        }
+      });
+
+      const availableCount = 2 - occupiedPositions.size;
+      availability.push({
+        spotNumber: spotNum,
+        available: availableCount,
+        occupied: occupiedPositions.size,
+      });
+    }
+
+    setSpotAvailability(availability);
+  };
 
   // PIN přihlášení
   if (!isAuthenticated) {
@@ -416,7 +513,145 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          {/* Mini náhled mapy s obsazeností */}
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Mapa obsazenosti - {format(selectedDate, "d. MMMM yyyy", { locale: cs })}
+                </CardTitle>
+                <CardDescription>
+                  Zobrazení dostupnosti lovných míst pro vybraný den
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Výběr data */}
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="text-center font-semibold min-w-[200px]">
+                      {format(selectedDate, "EEEE, d. MMMM yyyy", { locale: cs })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDate(new Date())}
+                    >
+                      Dnes
+                    </Button>
+                  </div>
+
+                  {/* Mini mapa */}
+                  <div className="relative w-full max-w-2xl mx-auto rounded-lg overflow-hidden border">
+                    <img 
+                      src={mapImageUrl}
+                      alt="Mapa rybníku" 
+                      className="w-full h-auto block"
+                      style={{ maxHeight: "300px", objectFit: "contain" }}
+                    />
+                    
+                    {/* SVG overlay s puntíky */}
+                    <svg 
+                      className="absolute inset-0 w-full h-full"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                    >
+                      {spotPositions.map((position) => {
+                        const availData = spotAvailability.find(a => a.spotNumber === position.spot_number);
+                        const available = availData?.available ?? 2;
+                        
+                        let color = "#10b981"; // green-500 - volné
+                        if (available === 0) color = "#ef4444"; // red-500 - obsazeno
+                        else if (available === 1) color = "#f59e0b"; // amber-500 - částečně
+
+                        return (
+                          <g key={position.spot_number}>
+                            <circle
+                              cx={position.x_position}
+                              cy={position.y_position}
+                              r="2.5"
+                              fill={color}
+                              stroke="white"
+                              strokeWidth="0.3"
+                            />
+                            <text
+                              x={position.x_position}
+                              y={position.y_position}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              fill="white"
+                              fontSize="2"
+                              fontWeight="bold"
+                              className="pointer-events-none"
+                            >
+                              {position.spot_number}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+
+                    {/* Legenda */}
+                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+                      <div className="flex flex-col gap-1.5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <span>Volné (2 pozice)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                          <span>Částečně (1 pozice)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                          <span>Obsazeno (0 pozic)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Souhrn dostupnosti */}
+                  <div className="grid grid-cols-3 gap-4 pt-4">
+                    <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-2xl font-bold text-green-700">
+                        {spotAvailability.filter(s => s.available === 2).length}
+                      </div>
+                      <div className="text-xs text-green-600">Volná místa</div>
+                    </div>
+                    <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <div className="text-2xl font-bold text-amber-700">
+                        {spotAvailability.filter(s => s.available === 1).length}
+                      </div>
+                      <div className="text-xs text-amber-600">Částečně obsazená</div>
+                    </div>
+                    <div className="text-center p-3 bg-red-50 rounded-lg border border-red-200">
+                      <div className="text-2xl font-bold text-red-700">
+                        {spotAvailability.filter(s => s.available === 0).length}
+                      </div>
+                      <div className="text-xs text-red-600">Plně obsazená</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Statistiky */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Celkem</CardTitle>
