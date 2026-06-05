@@ -157,6 +157,30 @@ export default function ReservationPage() {
     setShowForm(false);
   };
 
+  const handleDayClick = (day: Date) => {
+    if (!day) return;
+
+    const dayTime = startOfDay(day).getTime();
+    const isSelected = selectedDates.some(
+      (d) => startOfDay(d).getTime() === dayTime
+    );
+
+    if (isSelected) {
+      // Pokud je den vybraný, vždy ho odebrat (i když je to nejdřívější/poslední)
+      const newDates = selectedDates.filter(
+        (d) => startOfDay(d).getTime() !== dayTime
+      );
+      setSelectedDates(newDates);
+      setManuallySelected(true);
+      return;
+    }
+
+    // Přidat nový den
+    const newDates = [...selectedDates, day];
+    setSelectedDates(newDates);
+    setManuallySelected(true);
+  };
+
   const getDateRange = () => {
     if (selectedDates.length === 0) return null;
     
