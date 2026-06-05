@@ -181,7 +181,7 @@ export function Chatbot() {
             <MessageCircle className="h-6 w-6" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
           </div>
-          <span className="font-semibold">Potřebujete pomoc?</span>
+          <span className="font-semibold">Najdu vám volná másta?</span>
         </button>
       )}
 
