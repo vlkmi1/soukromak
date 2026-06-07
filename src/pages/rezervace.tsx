@@ -11,14 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { PondMap } from "@/components/PondMap";
 import { ReservationForm } from "@/components/ReservationForm";
-import { 
-  getSpotAvailability, 
+import {
+  getSpotAvailability,
   findBestSpotCombination,
   checkAdjacentAvailability,
   findAllPossibleCombinations,
   type ReservationSuggestion,
-  type SpotCombination,
-} from "@/services/reservationService";
+  type SpotCombination } from
+"@/services/reservationService";
 import { supabase } from "@/lib/supabase";
 import { Calendar as CalendarIcon, Users, Info, CheckCircle2, MapPin } from "lucide-react";
 import { cs } from "date-fns/locale";
@@ -46,12 +46,12 @@ export default function ReservationPage() {
     const params = new URLSearchParams(window.location.search);
     const datesParam = params.get("dates");
     const countParam = params.get("count");
-    
+
     if (datesParam) {
-      const dates = datesParam.split(",").map(d => new Date(d));
+      const dates = datesParam.split(",").map((d) => new Date(d));
       setSelectedDates(dates);
     }
-    
+
     if (countParam) {
       setFishermanCount(countParam);
     }
@@ -86,12 +86,12 @@ export default function ReservationPage() {
     endDate.setDate(endDate.getDate() + 60); // 60 dní dopředu
 
     try {
-      const { data: reservations, error } = await supabase
-        .from("reservations")
-        .select("spot_id, position_id, start_date, end_date, status")
-        .gte("end_date", today.toISOString())
-        .lte("start_date", endDate.toISOString())
-        .in("status", ["new", "confirmed", "paid"]);
+      const { data: reservations, error } = await supabase.
+      from("reservations").
+      select("spot_id, position_id, start_date, end_date, status").
+      gte("end_date", today.toISOString()).
+      lte("start_date", endDate.toISOString()).
+      in("status", ["new", "confirmed", "paid"]);
 
       if (error) throw error;
 
@@ -101,25 +101,25 @@ export default function ReservationPage() {
 
       for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
         const currentDay = new Date(d);
-        
+
         // Spočítat obsazená místa v tento den
         const occupiedPositions = new Set<string>();
         reservations?.forEach((res) => {
           const resStart = startOfDay(new Date(res.start_date));
           const resEnd = startOfDay(new Date(res.end_date));
-          
+
           if (currentDay >= resStart && currentDay <= resEnd) {
             occupiedPositions.add(`${res.spot_id}-${res.position_id}`);
           }
         });
 
         const occupiedCount = occupiedPositions.size;
-        const availableCount = (totalSpotsPerDay * 2) - occupiedCount; // 2 pozice na místo
+        const availableCount = totalSpotsPerDay * 2 - occupiedCount; // 2 pozice na místo
 
         availabilities.push({
           date: new Date(currentDay),
           availableSpots: availableCount,
-          totalSpots: totalSpotsPerDay * 2,
+          totalSpots: totalSpotsPerDay * 2
         });
       }
 
@@ -158,18 +158,18 @@ export default function ReservationPage() {
 
     const normalizedDate = startOfDay(date);
     const dateString = normalizedDate.toISOString();
-    
+
     setSelectedDates((prev) => {
-      const exists = prev.some(d => startOfDay(d).toISOString() === dateString);
+      const exists = prev.some((d) => startOfDay(d).toISOString() === dateString);
       if (exists) {
         // Odebrat den
-        return prev.filter(d => startOfDay(d).toISOString() !== dateString);
+        return prev.filter((d) => startOfDay(d).toISOString() !== dateString);
       } else {
         // Přidat den
         return [...prev, normalizedDate].sort((a, b) => a.getTime() - b.getTime());
       }
     });
-    
+
     setManuallySelected(false);
     setShowForm(false);
   };
@@ -200,11 +200,11 @@ export default function ReservationPage() {
 
   const getDateRange = () => {
     if (selectedDates.length === 0) return null;
-    
+
     const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
     return {
       from: startOfDay(sortedDates[0]),
-      to: endOfDay(sortedDates[sortedDates.length - 1]),
+      to: endOfDay(sortedDates[sortedDates.length - 1])
     };
   };
 
@@ -212,7 +212,7 @@ export default function ReservationPage() {
     setSelectedSpot([spotNumber]);
     setManuallySelected(true);
     setShowForm(false);
-    
+
     // Zkontrolovat sousední místa pro manuální výběr
     const dateRange = getDateRange();
     if (dateRange) {
@@ -226,7 +226,7 @@ export default function ReservationPage() {
 
     const availability = await getSpotAvailability(dateRange.from, dateRange.to);
     const adjacentCheck = checkAdjacentAvailability(spotNumber, parseInt(fishermanCount), availability);
-    
+
     setSuggestion(adjacentCheck);
     setAllCombinations([]);
   };
@@ -238,11 +238,11 @@ export default function ReservationPage() {
     const availability = await getSpotAvailability(dateRange.from, dateRange.to);
     const bestCombination = findBestSpotCombination(parseInt(fishermanCount), availability);
     const allPossible = findAllPossibleCombinations(parseInt(fishermanCount), availability);
-    
+
     setSuggestion(bestCombination);
     setAllCombinations(allPossible);
     setManuallySelected(false);
-    
+
     if (bestCombination && bestCombination.spots.length > 0) {
       setSelectedSpot(bestCombination.spots);
     }
@@ -254,7 +254,7 @@ export default function ReservationPage() {
       spots: spots,
       isOptimal: true,
       message: `Vybráno: Místa ${spots.join("+")}`,
-      type: "adjacent",
+      type: "adjacent"
     });
     setShowForm(true);
   };
@@ -282,7 +282,7 @@ export default function ReservationPage() {
           {/* Mapa rybníku - jednoduchý box */}
           <div className="mb-12 bg-white border border-gray-300 overflow-hidden">
             <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
-              <h2 className="text-xl font-bold text-[#2a3d32] uppercase tracking-wide">Mapa rybníku Ostrata</h2>
+              <h2 className="text-xl font-bold text-[#2a3d32] uppercase tracking-wide">MAPA RYBNÍKU SOUKROMÁK</h2>
               <p className="text-sm text-gray-600 mt-1">Klikněte na místo pro výběr konkrétního lovného místa</p>
             </div>
             <div className="p-6">
@@ -290,8 +290,8 @@ export default function ReservationPage() {
                 <PondMap
                   selectedSpots={selectedSpot}
                   onSpotSelect={handleSpotSelect}
-                  availability={currentAvailability}
-                />
+                  availability={currentAvailability} />
+                
               </div>
             </div>
           </div>
@@ -319,29 +319,29 @@ export default function ReservationPage() {
                   modifiers={{
                     fullyAvailable: fullyAvailable,
                     partiallyAvailable: partiallyAvailable,
-                    fullyBooked: fullyBooked,
+                    fullyBooked: fullyBooked
                   }}
                   modifiersStyles={{
                     selected: {
                       backgroundColor: "#3d5a43",
                       color: "white",
-                      fontWeight: "bold",
+                      fontWeight: "bold"
                     },
                     fullyAvailable: {
                       backgroundColor: "hsl(142 76% 85%)",
-                      color: "hsl(142 76% 20%)",
+                      color: "hsl(142 76% 20%)"
                     },
                     partiallyAvailable: {
                       backgroundColor: "hsl(38 92% 85%)",
-                      color: "hsl(38 92% 25%)",
+                      color: "hsl(38 92% 25%)"
                     },
                     fullyBooked: {
                       backgroundColor: "hsl(0 84% 85%)",
                       color: "hsl(0 84% 30%)",
-                      textDecoration: "line-through",
-                    },
-                  }}
-                />
+                      textDecoration: "line-through"
+                    }
+                  }} />
+                
                 
                 {/* Legenda barev */}
                 <div className="mt-4 p-3 bg-gray-50 space-y-2">
@@ -382,102 +382,102 @@ export default function ReservationPage() {
                       max="6"
                       value={fishermanCount}
                       onChange={(e) => setFishermanCount(e.target.value)}
-                      className="text-lg border-gray-300"
-                    />
+                      className="text-lg border-gray-300" />
+                    
                   </div>
                   <Button
                     onClick={handleAutomaticSearch}
                     disabled={!dateRange || selectedDates.length === 0}
                     className="w-full bg-[#3d5a43] hover:bg-[#4a6850] text-white uppercase tracking-wider font-bold"
-                    size="lg"
-                  >
+                    size="lg">
+                    
                     Najít dostupná místa
                   </Button>
                 </div>
               </div>
 
               {/* Zobrazení výsledků */}
-              {(suggestion || allCombinations.length > 0) && (
-                <div className="bg-white border border-gray-300 overflow-hidden">
+              {(suggestion || allCombinations.length > 0) &&
+              <div className="bg-white border border-gray-300 overflow-hidden">
                   <div className="bg-[#f5f5f5] border-b border-gray-300 px-6 py-4">
                     <h3 className="font-bold text-lg text-[#2a3d32] uppercase tracking-wide">3. Dostupná místa</h3>
                   </div>
                   <div className="p-6">
-                    {suggestion && (
-                      <div className={`p-4 rounded mb-4 ${
-                        suggestion.type === "none" 
-                          ? "bg-red-50 border border-red-200" 
-                          : suggestion.isOptimal 
-                            ? "bg-green-50 border border-green-200" 
-                            : "bg-amber-50 border border-amber-200"
-                      }`}>
+                    {suggestion &&
+                  <div className={`p-4 rounded mb-4 ${
+                  suggestion.type === "none" ?
+                  "bg-red-50 border border-red-200" :
+                  suggestion.isOptimal ?
+                  "bg-green-50 border border-green-200" :
+                  "bg-amber-50 border border-amber-200"}`
+                  }>
                         <p className={`text-sm font-medium ${
-                          suggestion.type === "none" 
-                            ? "text-red-800" 
-                            : suggestion.isOptimal 
-                              ? "text-green-800" 
-                              : "text-amber-800"
-                        }`}>
+                    suggestion.type === "none" ?
+                    "text-red-800" :
+                    suggestion.isOptimal ?
+                    "text-green-800" :
+                    "text-amber-800"}`
+                    }>
                           {suggestion.message}
                         </p>
                       </div>
-                    )}
+                  }
 
-                    {allCombinations.length > 0 && (
-                      <div className="space-y-2">
+                    {allCombinations.length > 0 &&
+                  <div className="space-y-2">
                         {allCombinations.map((combo, idx) => {
-                          const isSelected = JSON.stringify(combo.spots.sort()) === JSON.stringify(selectedSpot.sort());
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setSelectedSpot(combo.spots);
-                                setManuallySelected(true);
-                                setShowForm(true);
-                              }}
-                              className={`w-full text-left p-4 border transition-all ${
-                                isSelected 
-                                  ? "bg-[#3d5a43] text-white border-[#3d5a43]" 
-                                  : "bg-white border-gray-300 hover:border-[#4a6850] hover:bg-gray-50"
-                              }`}
-                            >
+                      const isSelected = JSON.stringify(combo.spots.sort()) === JSON.stringify(selectedSpot.sort());
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedSpot(combo.spots);
+                            setManuallySelected(true);
+                            setShowForm(true);
+                          }}
+                          className={`w-full text-left p-4 border transition-all ${
+                          isSelected ?
+                          "bg-[#3d5a43] text-white border-[#3d5a43]" :
+                          "bg-white border-gray-300 hover:border-[#4a6850] hover:bg-gray-50"}`
+                          }>
+                          
                               <div className="font-semibold">
                                 {combo.description}
                               </div>
-                            </button>
-                          );
-                        })}
+                            </button>);
+
+                    })}
                       </div>
-                    )}
+                  }
                   </div>
                 </div>
-              )}
+              }
             </div>
           </div>
 
           {/* Rezervační formulář */}
           <div className="max-w-2xl mx-auto">
-            {showForm && selectedSpot.length > 0 && dateRange && (
-              <ReservationForm
-                selectedSpots={selectedSpot}
-                selectedDates={selectedDates}
-                dateRange={dateRange}
-                fishermanCount={parseInt(fishermanCount)}
-                onSuccess={() => {
-                  setShowForm(false);
-                  setSelectedSpot([]);
-                  setSelectedDates([]);
-                  setManuallySelected(false);
-                  handleAutomaticSearch();
-                }}
-              />
-            )}
+            {showForm && selectedSpot.length > 0 && dateRange &&
+            <ReservationForm
+              selectedSpots={selectedSpot}
+              selectedDates={selectedDates}
+              dateRange={dateRange}
+              fishermanCount={parseInt(fishermanCount)}
+              onSuccess={() => {
+                setShowForm(false);
+                setSelectedSpot([]);
+                setSelectedDates([]);
+                setManuallySelected(false);
+                handleAutomaticSearch();
+              }} />
+
+            }
           </div>
         </div>
       </main>
 
       <Footer />
       <Chatbot />
-    </div>
-  );
+    </div>);
+
 }
