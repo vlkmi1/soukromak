@@ -31,6 +31,7 @@ export default function PricingPage() {
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -80,16 +81,16 @@ export default function PricingPage() {
       if (!data || data.length === 0) {
         console.warn("No pricing data found in database");
         setError("V databázi nejsou žádné cenové balíčky. Klikněte na 'Načíst výchozí ceny' pro vytvoření.");
-        setPackages([]);
+        setPricingRules([]);
         return;
       }
 
       console.log("Loaded pricing packages:", data);
-      setPackages(data);
+      setPricingRules(data);
     } catch (err: any) {
       console.error("Error loading pricing:", err);
       setError(`Nepodařilo se načíst ceník: ${err.message || "Neznámá chyba"}`);
-      setPackages([]);
+      setPricingRules([]);
     } finally {
       setLoading(false);
     }
@@ -209,6 +210,14 @@ export default function PricingPage() {
             <div className="text-center py-12">
               <p className="text-gray-600">Načítám ceník...</p>
             </div>
+          ) : error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : pricingRules.length === 0 ? (
+            <Alert>
+              <AlertDescription>V databázi nejsou žádné cenové balíčky.</AlertDescription>
+            </Alert>
           ) : (
             <div className="space-y-6">
               <Card>
