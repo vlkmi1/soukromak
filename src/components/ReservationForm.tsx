@@ -39,34 +39,28 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
     type: "success" | "error";
     message: string;
   } | null>(null);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    notes: "",
-  });
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState(false);
 
   useEffect(() => {
-    if (selectedDate) {
-      calculateReservationPrice();
+    if (dateRange.from && dateRange.to) {
+      calculateReservationPriceAsync();
     }
-  }, [selectedDate]);
+  }, [dateRange.from, dateRange.to]);
 
-  const calculateReservationPrice = async () => {
-    if (!selectedDate) return;
+  const calculateReservationPriceAsync = async () => {
+    if (!dateRange.from || !dateRange.to) return;
 
     setIsCalculating(true);
     try {
       const { calculatePrice } = await import("@/lib/pricing");
-      const days = 1; // Pro nyní jen 1denní rezervace
+      const diffTime = Math.abs(dateRange.to.getTime() - dateRange.from.getTime());
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
       const price = await calculatePrice(days);
-      setCalculatedPrice(price);
+      setCalculatedPrice(price * fishermanCount);
     } catch (error) {
       console.error("Error calculating price:", error);
-      setCalculatedPrice(500); // Fallback cena
+      setCalculatedPrice(500 * fishermanCount); // Fallback cena
     } finally {
       setIsCalculating(false);
     }
@@ -235,50 +229,27 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Souhrn rezervace */}
-            <div className="bg-[#f5f5f5] border border-[#3d5a43] p-4 space-y-3">
-              <div className="flex items-start gap-2 text-sm">
-                <Calendar className="h-5 w-5 text-[#3d5a43] flex-shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">Období:</span>
-                  <div className="text-[#2a3d32] font-bold">
-                    {dateRange.from && dateRange.to && (
-                      <>
-                        {format(dateRange.from, "d. MMM", { locale: cs })} - {format(dateRange.to, "d. MMM yyyy", { locale: cs })}
-                        {" "}({selectedDates.length} {selectedDates.length === 1 ? "den" : selectedDates.length < 5 ? "dny" : "dní"})
-                      </>
-                    )}
-                  </div>
+            {selectedSpots.length > 0 && dateRange.from && dateRange.to && (
+              <div className="mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                <h3 className="font-bold text-green-800 mb-2 uppercase tracking-wide">
+                  Souhrn rezervace
+                </h3>
+                <div className="space-y-1 text-sm text-green-700">
+                  <p>📅 Období: {format(dateRange.from, "d.M.yyyy", { locale: cs })} - {format(dateRange.to, "d.M.yyyy", { locale: cs })}</p>
+                  <p>
+                    📍 Místa: {selectedSpots.map(s => `#${s}`).join(", ")}
+                  </p>
+                  <p>👥 Počet rybářů: {fishermanCount}</p>
+                  {isCalculating ? (
+                    <p className="font-bold">💰 Cena: Počítám...</p>
+                  ) : (
+                    <p className="font-bold">
+                      💰 Cena: {calculatedPrice.toLocaleString("cs-CZ")} Kč
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="flex items-start gap-2 text-sm">
-                <Users className="h-5 w-5 text-[#3d5a43] flex-shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">Počet rybářů:</span>
-                  <div className="text-[#2a3d32] font-bold">
-                    {fishermanCount} {fishermanCount === 1 ? "rybář" : "rybáři"}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="h-5 w-5 text-[#3d5a43] flex-shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">
-                    {selectedSpots.length === 1 ? "Místo:" : "Místa:"}
-                  </span>
-                  <div className="text-[#2a3d32] font-bold">
-                    {selectedSpots.map(s => `#${s}`).join(" + ")}
-                  </div>
-                </div>
-              </div>
-              <div className="pt-3 border-t border-[#3d5a43]/20">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-gray-700 uppercase text-xs tracking-wide">Celková cena:</span>
-                  <span className="text-2xl font-bold text-[#3d5a43]">
-                    {formatPrice(calculateReservationPrice(dateRange.from!, dateRange.to!, fishermanCount))}
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Kontaktní formulář */}
             <div className="space-y-4">
