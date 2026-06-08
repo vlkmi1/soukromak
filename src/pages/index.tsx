@@ -60,7 +60,7 @@ export default function HomePage() {
                 <div className="bg-[#3d5a43] text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MapPin className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold text-[#2a3d32] mb-2 uppercase tracking-wide">14 Lovných míst</h3>
+                <h3 className="text-xl font-bold text-[#2a3d32] mb-2 uppercase tracking-wide">18 LOVNÝCH MÍST</h3>
                 <p className="text-gray-600">
                   Každé místo s 2 pozicemi pro rybáře
                 </p>
@@ -96,9 +96,9 @@ export default function HomePage() {
               O rybníku
             </h2>
             <div className="prose max-w-none text-gray-700">
-              <p className="text-lg leading-relaxed">
-                {siteName} nabízí 14 lovných míst s možností rezervace online. 
-                Každé místo má 2 pozice pro rybáře. Ideální pro kaprový rybolov v příjemném prostředí.
+              <p className="text-lg leading-relaxed">Můj soukromák nabízí 18 lovných míst s možností rezervace online. Každé místo má 2 pozice pro rybáře. Ideální pro kaprový rybolov v příjemném prostředí.
+
+
               </p>
             </div>
           </div>
@@ -107,6 +107,6 @@ export default function HomePage() {
 
       <Footer />
       <Chatbot />
-    </div>
-  );
+    </div>);
+
 }
