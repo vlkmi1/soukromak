@@ -1,0 +1,2 @@
+-- Povolit RLS
+ALTER TABLE pricing ENABLE ROW LEVEL SECURITY;

@@ -60,22 +60,36 @@ export default function PricingPage() {
 
   const loadPricing = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log("Loading pricing from database...");
+      
       const { data, error } = await supabase
         .from("pricing")
         .select("*")
         .order("days", { ascending: true });
 
-      if (error) throw error;
+      console.log("Pricing query result:", { data, error });
 
-      setPricingRules(data || []);
-    } catch (error) {
-      console.error("Error loading pricing:", error);
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se načíst ceník.",
-        variant: "destructive",
-      });
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn("No pricing data found in database");
+        setError("V databázi nejsou žádné cenové balíčky. Klikněte na 'Načíst výchozí ceny' pro vytvoření.");
+        setPackages([]);
+        return;
+      }
+
+      console.log("Loaded pricing packages:", data);
+      setPackages(data);
+    } catch (err: any) {
+      console.error("Error loading pricing:", err);
+      setError(`Nepodařilo se načíst ceník: ${err.message || "Neznámá chyba"}`);
+      setPackages([]);
     } finally {
       setLoading(false);
     }
