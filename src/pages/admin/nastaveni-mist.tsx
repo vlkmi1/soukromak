@@ -17,6 +17,12 @@ interface SpotPosition {
   y_position: number;
 }
 
+interface SpotAvailability {
+  spotNumber: number;
+  occupied: number;
+  total: number;
+}
+
 export default function MapSettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -25,6 +31,7 @@ export default function MapSettingsPage() {
   const [pin, setPin] = useState("");
   
   const [spots, setSpots] = useState<SpotPosition[]>([]);
+  const [spotAvailability, setSpotAvailability] = useState<SpotAvailability[]>([]);
   const [mapImageId, setMapImageId] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
@@ -79,9 +86,63 @@ export default function MapSettingsPage() {
       if (spotsError) throw spotsError;
 
       setSpots(spotsData || []);
+
+      // Načíst aktuální rezervace pro zobrazení obsazenosti
+      await loadSpotAvailability();
     } catch (error) {
       console.error("Error loading settings:", error);
       setMessage({ type: "error", text: "Chyba při načítání nastavení" });
+    }
+  };
+
+  const loadSpotAvailability = async () => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      // Načíst všechny aktivní rezervace pro dnešek a budoucnost
+      const { data: reservations, error } = await supabase
+        .from("reservations")
+        .select("spot_id, position_id, start_date, end_date, status")
+        .gte("end_date", today)
+        .in("status", ["new", "confirmed", "paid"]);
+
+      if (error) throw error;
+
+      // Načíst všechna fishing_spots s jejich ID
+      const { data: fishingSpots } = await supabase
+        .from("fishing_spots")
+        .select("id, number");
+
+      if (!fishingSpots) return;
+
+      // Spočítat obsazenost pro každé místo
+      const availability: SpotAvailability[] = fishingSpots.map((spot) => {
+        // Spočítat unikátní pozice obsazené na tomto místě
+        const occupiedPositions = new Set<number>();
+        
+        reservations?.forEach((res) => {
+          if (res.spot_id === spot.id) {
+            const resStart = new Date(res.start_date);
+            const resEnd = new Date(res.end_date);
+            const now = new Date(today);
+            
+            // Zkontrolovat překryv s dneškem nebo budoucností
+            if (resEnd >= now) {
+              occupiedPositions.add(res.position_id);
+            }
+          }
+        });
+
+        return {
+          spotNumber: spot.number,
+          occupied: occupiedPositions.size,
+          total: 2,
+        };
+      });
+
+      setSpotAvailability(availability);
+    } catch (error) {
+      console.error("Error loading spot availability:", error);
     }
   };
 
@@ -262,6 +323,23 @@ export default function MapSettingsPage() {
     }
   };
 
+  const getSpotColor = (spotNumber: number): string => {
+    const availability = spotAvailability.find(a => a.spotNumber === spotNumber);
+    if (!availability) return "#3d5a43"; // default green
+
+    if (availability.occupied === 0) return "#22c55e"; // green - plně volné
+    if (availability.occupied === 1) return "#eab308"; // yellow - částečně obsazené
+    return "#ef4444"; // red - plně obsazené
+  };
+
+  const getSpotAvailabilityText = (spotNumber: number): string => {
+    const availability = spotAvailability.find(a => a.spotNumber === spotNumber);
+    if (!availability) return "?";
+    
+    const free = availability.total - availability.occupied;
+    return `${free}/${availability.total}`;
+  };
+
   if (showPinPrompt) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -340,82 +418,123 @@ export default function MapSettingsPage() {
                   </div>
 
                   {imageUrl && (
-                    <div 
-                      ref={containerRef}
-                      className="relative w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden cursor-crosshair"
-                      onClick={handleImageClick}
-                    >
-                      <img
-                        ref={imageRef}
-                        src={imageUrl}
-                        alt="Mapa rybníku"
-                        className="w-full h-auto block"
-                        draggable={false}
-                      />
-                      
-                      {/* SVG overlay s puntíky - stejný přístup jako v PondMap */}
-                      <svg 
-                        className="absolute inset-0 w-full h-full pointer-events-none"
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
+                    <>
+                      <div 
+                        ref={containerRef}
+                        className="relative w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden cursor-crosshair"
+                        onClick={handleImageClick}
                       >
-                        {spots.map((spot) => (
-                          <g key={spot.number} className="pointer-events-auto">
-                            <circle
-                              cx={spot.x_position}
-                              cy={spot.y_position}
-                              r="2.5"
-                              fill={draggedSpot === spot.number ? "#2563eb" : "#3d5a43"}
-                              stroke="white"
-                              strokeWidth="0.3"
-                              className="cursor-move"
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                handleSpotDrag(e as any, spot.number);
-                              }}
-                            />
-                            <text
-                              x={spot.x_position}
-                              y={spot.y_position}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill="white"
-                              fontSize="2"
-                              fontWeight="bold"
-                              className="pointer-events-none"
-                            >
-                              {spot.number}
-                            </text>
-                            {/* Tlačítko X pro smazání */}
-                            <g 
-                              className="pointer-events-auto cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (spot.id) handleDeleteSpot(spot.id);
-                              }}
-                            >
+                        <img
+                          ref={imageRef}
+                          src={imageUrl}
+                          alt="Mapa rybníku"
+                          className="w-full h-auto block"
+                          draggable={false}
+                        />
+                        
+                        {/* SVG overlay s puntíky - barevně podle obsazenosti */}
+                        <svg 
+                          className="absolute inset-0 w-full h-full pointer-events-none"
+                          viewBox="0 0 100 100"
+                          preserveAspectRatio="none"
+                        >
+                          {spots.map((spot) => (
+                            <g key={spot.number} className="pointer-events-auto">
+                              {/* Puntík s barvou podle obsazenosti */}
                               <circle
-                                cx={spot.x_position + 3}
-                                cy={spot.y_position - 3}
-                                r="1.5"
-                                fill="#ef4444"
+                                cx={spot.x_position}
+                                cy={spot.y_position}
+                                r="2.5"
+                                fill={draggedSpot === spot.number ? "#2563eb" : getSpotColor(spot.number)}
+                                stroke="white"
+                                strokeWidth="0.3"
+                                className="cursor-move transition-colors"
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                  handleSpotDrag(e as any, spot.number);
+                                }}
                               />
+                              {/* Číslo místa */}
                               <text
-                                x={spot.x_position + 3}
-                                y={spot.y_position - 3}
+                                x={spot.x_position}
+                                y={spot.y_position - 0.3}
                                 textAnchor="middle"
                                 dominantBaseline="middle"
                                 fill="white"
-                                fontSize="1.5"
+                                fontSize="1.8"
                                 fontWeight="bold"
+                                className="pointer-events-none"
                               >
-                                ×
+                                {spot.number}
                               </text>
+                              {/* Dostupnost pod číslem */}
+                              <text
+                                x={spot.x_position}
+                                y={spot.y_position + 1.2}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                fill="white"
+                                fontSize="1.2"
+                                fontWeight="bold"
+                                className="pointer-events-none"
+                              >
+                                {getSpotAvailabilityText(spot.number)}
+                              </text>
+                              {/* Tlačítko X pro smazání */}
+                              <g 
+                                className="pointer-events-auto cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (spot.id) handleDeleteSpot(spot.id);
+                                }}
+                              >
+                                <circle
+                                  cx={spot.x_position + 3.5}
+                                  cy={spot.y_position - 3.5}
+                                  r="1.5"
+                                  fill="#ef4444"
+                                />
+                                <text
+                                  x={spot.x_position + 3.5}
+                                  y={spot.y_position - 3.5}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  fill="white"
+                                  fontSize="1.5"
+                                  fontWeight="bold"
+                                >
+                                  ×
+                                </text>
+                              </g>
                             </g>
-                          </g>
-                        ))}
-                      </svg>
-                    </div>
+                          ))}
+                        </svg>
+                      </div>
+
+                      {/* Legenda barev */}
+                      <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded">
+                        <h4 className="font-bold text-sm text-[#2a3d32] mb-3 uppercase tracking-wide">
+                          Legenda obsazenosti
+                        </h4>
+                        <div className="grid grid-cols-3 gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-[#22c55e] border border-white"></div>
+                            <span className="text-gray-700">Plně volné (0/2)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-[#eab308] border border-white"></div>
+                            <span className="text-gray-700">Částečně (1/2)</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-[#ef4444] border border-white"></div>
+                            <span className="text-gray-700">Obsazené (2/2)</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-3">
+                          Číslo pod značkou ukazuje volné/celkem pozice (např. 1/2 = 1 volná pozice ze 2)
+                        </p>
+                      </div>
+                    </>
                   )}
 
                   <p className="text-sm text-gray-500 mt-4">
@@ -441,25 +560,40 @@ export default function MapSettingsPage() {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {spots.sort((a, b) => a.number - b.number).map((spot) => (
-                        <div
-                          key={spot.number}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200"
-                        >
-                          <div>
-                            <span className="font-bold text-[#2a3d32]">Místo #{spot.number}</span>
-                            <div className="text-xs text-gray-500">
-                              X: {spot.x_position.toFixed(1)}%, Y: {spot.y_position.toFixed(1)}%
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => spot.id && handleDeleteSpot(spot.id)}
-                            className="text-red-500 hover:text-red-700"
+                      {spots.sort((a, b) => a.number - b.number).map((spot) => {
+                        const availability = spotAvailability.find(a => a.spotNumber === spot.number);
+                        const free = availability ? availability.total - availability.occupied : 2;
+                        const colorClass = 
+                          !availability || availability.occupied === 0 ? "bg-green-50 border-green-200" :
+                          availability.occupied === 1 ? "bg-yellow-50 border-yellow-200" :
+                          "bg-red-50 border-red-200";
+                        
+                        return (
+                          <div
+                            key={spot.number}
+                            className={`flex items-center justify-between p-3 rounded border ${colorClass}`}
                           >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
+                            <div>
+                              <span className="font-bold text-[#2a3d32]">Místo #{spot.number}</span>
+                              <div className="text-xs text-gray-600 mt-1">
+                                Pozice: X: {spot.x_position.toFixed(1)}%, Y: {spot.y_position.toFixed(1)}%
+                              </div>
+                              {availability && (
+                                <div className="text-xs font-semibold mt-1">
+                                  {free === 2 ? "🟢" : free === 1 ? "🟡" : "🔴"} 
+                                  {" "}{free === 0 ? "Plně obsazeno" : `${free} ${free === 1 ? "volná pozice" : "volné pozice"}`}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => spot.id && handleDeleteSpot(spot.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
