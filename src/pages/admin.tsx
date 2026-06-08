@@ -477,6 +477,17 @@ export default function AdminPage() {
                 </h2>
                 <p className="text-sm mt-2 text-gray-600">Upload a správa fotek</p>
               </button>
+
+              <button
+                onClick={() => router.push("/admin/cenik")}
+                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+              >
+                <DollarSign className="h-12 w-12 mb-4 text-[#2a3d32]" />
+                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                  Ceník
+                </h2>
+                <p className="text-sm mt-2 text-gray-600">Správa cen balíčků</p>
+              </button>
             </div>
           </div>
 

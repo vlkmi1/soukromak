@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,6 +39,38 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    notes: "",
+  });
+  const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  useEffect(() => {
+    if (selectedDate) {
+      calculateReservationPrice();
+    }
+  }, [selectedDate]);
+
+  const calculateReservationPrice = async () => {
+    if (!selectedDate) return;
+
+    setIsCalculating(true);
+    try {
+      const { calculatePrice } = await import("@/lib/pricing");
+      const days = 1; // Pro nyní jen 1denní rezervace
+      const price = await calculatePrice(days);
+      setCalculatedPrice(price);
+    } catch (error) {
+      console.error("Error calculating price:", error);
+      setCalculatedPrice(500); // Fallback cena
+    } finally {
+      setIsCalculating(false);
+    }
+  };
 
   // Detekce mezer v období (nesouvislé dny)
   const detectDateGaps = () => {
