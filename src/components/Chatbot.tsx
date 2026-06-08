@@ -366,11 +366,19 @@ export function Chatbot() {
                 <Calendar
                   mode="multiple"
                   selected={selectedDates}
-                  onSelect={handleDateSelect}
+                  onSelect={setSelectedDates}
                   locale={cs}
                   disabled={(date) => date < new Date()}
                   className="rounded-md"
                 />
+                {selectedDates.length > 0 && (
+                  <Button
+                    onClick={() => handleDateSelect(selectedDates)}
+                    className="w-full mt-3 bg-[#3d5a43] hover:bg-[#4a6850]"
+                  >
+                    Potvrdit výběr ({selectedDates.length} {selectedDates.length === 1 ? "den" : selectedDates.length < 5 ? "dny" : "dnů"})
+                  </Button>
+                )}
               </div>
             )}
 
