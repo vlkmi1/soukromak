@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
 import { Upload, Save, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SpotPosition {
   id?: number;
@@ -18,6 +19,7 @@ interface SpotPosition {
 
 export default function MapSettingsPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPinPrompt, setShowPinPrompt] = useState(true);
   const [pin, setPin] = useState("");
@@ -179,7 +181,7 @@ export default function MapSettingsPage() {
         description: "Lovné místo bylo úspěšně odstraněno.",
       });
 
-      loadSpots();
+      loadSettings();
     } catch (error: any) {
       console.error("Error deleting spot:", error);
       toast({
@@ -389,7 +391,7 @@ export default function MapSettingsPage() {
                               className="pointer-events-auto cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteSpot(spot.number);
+                                if (spot.id) handleDeleteSpot(spot.id);
                               }}
                             >
                               <circle
@@ -451,7 +453,7 @@ export default function MapSettingsPage() {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleDeleteSpot(spot.number)}
+                            onClick={() => spot.id && handleDeleteSpot(spot.id)}
                             className="text-red-500 hover:text-red-700"
                           >
                             <X className="h-4 w-4" />
