@@ -145,11 +145,17 @@ export function Chatbot() {
       const allRecommendations = [];
       
       for (const date of selectedDates) {
-        const result = await findBestSpotCombination(date, count, together);
+        // Získat dostupnost míst pro tento konkrétní den
+        const { getSpotAvailability } = await import("@/services/reservationService");
+        const availability = await getSpotAvailability(date, date);
         
-        if (result.available) {
+        // Najít nejlepší kombinaci
+        const { findBestSpotCombination } = await import("@/services/reservationService");
+        const result = findBestSpotCombination(count, availability);
+        
+        if (result && result.spots.length > 0) {
           // Seřadit podle popularity (nejvíc rezervací = nejoblíbenější)
-          const sortedSpots = result.spots.sort((a: number, b: number) => {
+          const sortedSpots = [...result.spots].sort((a: number, b: number) => {
             const aCount = spotStats[a] || 0;
             const bCount = spotStats[b] || 0;
             return bCount - aCount; // Sestupně
