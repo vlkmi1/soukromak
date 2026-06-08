@@ -152,8 +152,42 @@ export default function MapSettingsPage() {
     setDraggedSpot(spotNumber);
   };
 
-  const handleDeleteSpot = (spotNumber: number) => {
-    setSpots(prev => prev.filter(s => s.number !== spotNumber));
+  const handleDeleteSpot = async (spotId: number) => {
+    if (!confirm("Opravdu chcete smazat toto místo?")) return;
+
+    try {
+      // Nejdřív smazat pozice
+      const { error: positionsError } = await supabase
+        .from("spot_positions")
+        .delete()
+        .eq("spot_id", spotId);
+
+      if (positionsError) {
+        console.error("Error deleting positions:", positionsError);
+      }
+
+      // Pak smazat místo
+      const { error: spotError } = await supabase
+        .from("fishing_spots")
+        .delete()
+        .eq("id", spotId);
+
+      if (spotError) throw spotError;
+
+      toast({
+        title: "Místo smazáno",
+        description: "Lovné místo bylo úspěšně odstraněno.",
+      });
+
+      loadSpots();
+    } catch (error: any) {
+      console.error("Error deleting spot:", error);
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodařilo se smazat místo.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSave = async () => {
