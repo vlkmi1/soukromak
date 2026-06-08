@@ -141,6 +141,49 @@ export default function PricingPage() {
     }
   };
 
+  const handleLoadDefaults = async () => {
+    setSaving(true);
+    setError(null);
+    
+    try {
+      const defaultPricing = [
+        { days: 1, name: "1denní balíček", price_per_day: 500, is_active: true },
+        { days: 2, name: "2denní balíček", price_per_day: 450, is_active: true },
+        { days: 3, name: "3denní balíček", price_per_day: 400, is_active: true },
+        { days: 4, name: "4denní balíček", price_per_day: 375, is_active: true },
+        { days: 5, name: "5denní balíček", price_per_day: 350, is_active: true },
+        { days: 6, name: "6denní balíček", price_per_day: 333, is_active: true },
+        { days: 7, name: "7denní týdenní balíček", price_per_day: 314, is_active: true },
+      ];
+
+      const { error } = await supabase
+        .from("pricing")
+        .insert(defaultPricing);
+
+      if (error) throw error;
+
+      toast({
+        title: "Hotovo",
+        description: "Výchozí ceník byl úspěšně načten.",
+      });
+
+      // Clear cache in pricing.ts
+      const { clearPricingCache } = await import("@/lib/pricing");
+      clearPricingCache();
+
+      loadPricing();
+    } catch (error: any) {
+      console.error("Error loading defaults:", error);
+      toast({
+        title: "Chyba",
+        description: error.message || "Nepodařilo se načíst výchozí ceny.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col bg-white">
@@ -211,13 +254,35 @@ export default function PricingPage() {
               <p className="text-gray-600">Načítám ceník...</p>
             </div>
           ) : error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className="space-y-4">
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+              <div className="text-center">
+                <Button
+                  onClick={handleLoadDefaults}
+                  disabled={saving}
+                  className="bg-[#3d5a43] hover:bg-[#4a6850]"
+                >
+                  {saving ? "Načítám..." : "Načíst výchozí ceny"}
+                </Button>
+              </div>
+            </div>
           ) : pricingRules.length === 0 ? (
-            <Alert>
-              <AlertDescription>V databázi nejsou žádné cenové balíčky.</AlertDescription>
-            </Alert>
+            <div className="space-y-4">
+              <Alert>
+                <AlertDescription>V databázi nejsou žádné cenové balíčky.</AlertDescription>
+              </Alert>
+              <div className="text-center">
+                <Button
+                  onClick={handleLoadDefaults}
+                  disabled={saving}
+                  className="bg-[#3d5a43] hover:bg-[#4a6850]"
+                >
+                  {saving ? "Načítám..." : "Načíst výchozí ceny"}
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="space-y-6">
               <Card>
