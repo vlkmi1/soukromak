@@ -244,55 +244,103 @@ export function Chatbot() {
       addBotMessage("Moment, odesílám vaši rezervaci... ⏳");
 
       try {
-        // Nejdřív načíst všechna fishing_spots (pro převod spot_number na spot_id)
-        const { data: fishingSpots, error: spotsError } = await supabase
+        // Načíst všechna lovná místa s jejich pozicemi
+        const { data: spots, error: spotsError } = await supabase
           .from("fishing_spots")
-          .select("id, number, spot_positions(id)");
+          .select(`
+            id,
+            number,
+            spot_positions (
+              id,
+              position_number
+            )
+          `);
 
-        if (spotsError) throw spotsError;
+        if (spotsError) {
+          console.error("Error loading fishing spots:", spotsError);
+          throw spotsError;
+        }
 
-        // Pro každý den a každé místo vytvořit rezervaci
+        console.log("Loaded fishing spots:", spots);
+
+        if (!spots || spots.length === 0) {
+          throw new Error("No fishing spots found in database");
+        }
+
+        // Pro každý den a každé doporučené místo vytvořit rezervaci
         const reservations = [];
         
         for (const rec of recommendedSpots) {
           const reservationDate = format(rec.date, "yyyy-MM-dd");
           
+          console.log("Processing recommendation:", rec);
+          
           for (const spotNumber of rec.spots) {
-            // Najít spot_id podle čísla
-            const spot = fishingSpots?.find((s: any) => s.number === spotNumber);
-            if (!spot || !spot.spot_positions || spot.spot_positions.length === 0) {
-              console.error(`Spot ${spotNumber} not found or has no positions`);
+            // Najít spot podle čísla
+            const spot = spots.find((s: any) => s.number === spotNumber);
+            
+            console.log(`Looking for spot number ${spotNumber}:`, spot);
+            
+            if (!spot) {
+              console.error(`Spot with number ${spotNumber} not found in database`);
+              continue;
+            }
+
+            if (!spot.spot_positions || spot.spot_positions.length === 0) {
+              console.error(`Spot ${spotNumber} (id: ${spot.id}) has no positions`);
               continue;
             }
 
             // Určit kolik rybářů bude na tomto místě (max 2 na místo)
-            const positionsNeeded = Math.min(fishermanCount, 2);
+            const remainingFishermen = fishermanCount - (reservations.length);
+            const positionsNeeded = Math.min(remainingFishermen, 2, spot.spot_positions.length);
             
-            // Vytvořit rezervaci pro každou pozici
-            for (let i = 0; i < positionsNeeded && i < spot.spot_positions.length; i++) {
+            console.log(`Spot ${spotNumber}: creating ${positionsNeeded} reservations`);
+            
+            // Vytvořit rezervaci pro každou potřebnou pozici
+            for (let i = 0; i < positionsNeeded; i++) {
+              const position = spot.spot_positions[i];
+              
               reservations.push({
                 spot_id: spot.id,
-                position_id: spot.spot_positions[i].id,
+                position_id: position.id,
                 start_date: reservationDate,
                 end_date: reservationDate,
                 customer_name: customerName,
                 customer_email: textInput.trim(),
                 customer_phone: customerPhone,
                 status: "new",
-                price: 0, // Cena bude doplněna adminem
+                price: 0,
                 notes: `Rezervace přes chatbot - ${fishermanCount} ${fishermanCount === 1 ? "rybář" : fishermanCount < 5 ? "rybáři" : "rybářů"}`,
               });
             }
+
+            // Pokud už máme dost rezervací pro všechny rybáře, přestaň
+            if (reservations.length >= fishermanCount) {
+              break;
+            }
+          }
+
+          // Pokud už máme dost rezervací pro všechny rybáře, přestaň
+          if (reservations.length >= fishermanCount) {
+            break;
           }
         }
 
+        console.log("Final reservations to insert:", reservations);
+
         if (reservations.length === 0) {
-          throw new Error("No reservations to create");
+          throw new Error("Could not create any reservations - no valid spots/positions found");
         }
 
-        const { error } = await supabase.from("reservations").insert(reservations);
+        const { error: insertError } = await supabase
+          .from("reservations")
+          .insert(reservations);
 
-        if (error) throw error;
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          throw insertError;
+        }
 
         // Odeslat email (TODO: implementovat email service)
         addBotMessage(
@@ -301,14 +349,14 @@ export function Chatbot() {
         
         toast({
           title: "Rezervace vytvořena",
-          description: "Potvrzovací email byl odeslán.",
+          description: `${reservations.length} ${reservations.length === 1 ? "rezervace byla vytvořena" : "rezervace byly vytvořeny"}.`,
         });
 
         setState("done");
       } catch (error: any) {
         console.error("Error creating reservation:", error);
         addBotMessage(
-          `Bohužel nastala chyba při vytváření rezervace: ${error?.message || "Neznámá chyba"}. Kontaktujte nás prosím telefonicky nebo zkuste znovu později.`
+          `Bohužel nastala chyba: ${error?.message || "Neznámá chyba"}. Kontaktujte nás prosím telefonicky.`
         );
         setState("done");
       }
