@@ -936,7 +936,7 @@ export default function AdminPage() {
                                   <Select
                                     value={reservation.status}
                                     onValueChange={(value) =>
-                                      handleStatusChange(reservation.id, value as any)
+                                      updateReservationStatus([reservation.id], value as ReservationStatus)
                                     }
                                   >
                                     <SelectTrigger className="w-[140px]">
