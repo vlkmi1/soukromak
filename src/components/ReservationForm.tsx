@@ -223,18 +223,18 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
         price
       );
 
-      if (result.success && result.reservationIds) {
+      if (result.success && result.reservations) {
         // Uložit vybrané doplňky
-        if (selectedAddons.length > 0 && result.reservationIds.length > 0) {
+        if (selectedAddons.length > 0 && result.reservations.length > 0) {
           const days = Math.ceil(Math.abs(dateRange.to!.getTime() - dateRange.from!.getTime()) / (1000 * 60 * 60 * 24)) + 1;
           
           const addonRecords = [];
-          for (const reservationId of result.reservationIds) {
+          for (const reservation of result.reservations) {
             for (const addonId of selectedAddons) {
               const addon = availableAddons.find((a) => a.id === addonId);
               if (addon) {
                 addonRecords.push({
-                  reservation_id: reservationId,
+                  reservation_id: reservation.id,
                   addon_id: addonId,
                   quantity: 1,
                   price_per_day: addon.price_per_day,
