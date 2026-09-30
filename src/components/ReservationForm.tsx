@@ -10,7 +10,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, AlertCircle, CheckCircle2, Calendar, Banknote, AlertTriangle, CheckCircle, MapPin } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Users, AlertCircle, CheckCircle2, Calendar, Banknote, AlertTriangle, CheckCircle, MapPin, Package } from "lucide-react";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { createReservation } from "@/services/reservationService";
@@ -18,6 +19,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DateRange } from "react-day-picker";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getPricingPackageName, formatPrice, calculateReservationPrice } from "@/lib/pricing";
+import { supabase } from "@/lib/supabase";
+
+interface Addon {
+  id: number;
+  name: string;
+  description?: string;
+  image_url?: string;
+  price_per_day: number;
+  is_active: boolean;
+}
 
 interface ReservationFormProps {
   selectedSpots: number[];
@@ -41,12 +52,76 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
   } | null>(null);
   const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [availableAddons, setAvailableAddons] = useState<Addon[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<number[]>([]);
+  const [loadingAddons, setLoadingAddons] = useState(false);
 
   useEffect(() => {
     if (dateRange.from && dateRange.to) {
       calculateReservationPriceAsync();
     }
-  }, [dateRange.from, dateRange.to]);
+  }, [dateRange.from, dateRange.to, selectedAddons]);
+
+  useEffect(() => {
+    if (selectedSpots.length > 0) {
+      loadAvailableAddons();
+    } else {
+      setAvailableAddons([]);
+      setSelectedAddons([]);
+    }
+  }, [selectedSpots]);
+
+  const loadAvailableAddons = async () => {
+    setLoadingAddons(true);
+    try {
+      // Načíst ID vybraných míst z fishing_spots
+      const { data: spotsData, error: spotsError } = await supabase
+        .from("fishing_spots")
+        .select("id")
+        .in("number", selectedSpots);
+
+      if (spotsError) throw spotsError;
+
+      const spotIds = spotsData?.map((s) => s.id) || [];
+
+      if (spotIds.length === 0) {
+        setAvailableAddons([]);
+        return;
+      }
+
+      // Načíst dostupné doplňky pro vybraná místa
+      const { data: availabilityData, error: availabilityError } = await supabase
+        .from("addon_availability")
+        .select("addon_id")
+        .in("spot_id", spotIds);
+
+      if (availabilityError) throw availabilityError;
+
+      const addonIds = Array.from(new Set(availabilityData?.map((a) => a.addon_id) || []));
+
+      if (addonIds.length === 0) {
+        setAvailableAddons([]);
+        return;
+      }
+
+      // Načíst detail doplňků
+      const { data: addonsData, error: addonsError } = await supabase
+        .from("addons")
+        .select("*")
+        .in("id", addonIds)
+        .eq("is_active", true)
+        .order("name");
+
+      if (addonsError) throw addonsError;
+
+      setAvailableAddons(addonsData || []);
+    } catch (error) {
+      console.error("Error loading addons:", error);
+      setAvailableAddons([]);
+    } finally {
+      setLoadingAddons(false);
+    }
+  };
 
   const calculateReservationPriceAsync = async () => {
     if (!dateRange.from || !dateRange.to) return;
@@ -56,14 +131,32 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
       const { calculatePrice } = await import("@/lib/pricing");
       const diffTime = Math.abs(dateRange.to.getTime() - dateRange.from.getTime());
       const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      const price = await calculatePrice(days);
-      setCalculatedPrice(price * fishermanCount);
+      const basePrice = await calculatePrice(days);
+      
+      // Přičíst ceny doplňků
+      let addonsPrice = 0;
+      selectedAddons.forEach((addonId) => {
+        const addon = availableAddons.find((a) => a.id === addonId);
+        if (addon) {
+          addonsPrice += addon.price_per_day * days;
+        }
+      });
+
+      setCalculatedPrice((basePrice * fishermanCount) + addonsPrice);
     } catch (error) {
       console.error("Error calculating price:", error);
       setCalculatedPrice(500 * fishermanCount); // Fallback cena
     } finally {
       setIsCalculating(false);
     }
+  };
+
+  const toggleAddon = (addonId: number) => {
+    setSelectedAddons((prev) =>
+      prev.includes(addonId)
+        ? prev.filter((id) => id !== addonId)
+        : [...prev, addonId]
+    );
   };
 
   // Detekce mezer v období (nesouvislé dny)
@@ -130,7 +223,38 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
         price
       );
 
-      if (result.success) {
+      if (result.success && result.reservationIds) {
+        // Uložit vybrané doplňky
+        if (selectedAddons.length > 0 && result.reservationIds.length > 0) {
+          const days = Math.ceil(Math.abs(dateRange.to!.getTime() - dateRange.from!.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          
+          const addonRecords = [];
+          for (const reservationId of result.reservationIds) {
+            for (const addonId of selectedAddons) {
+              const addon = availableAddons.find((a) => a.id === addonId);
+              if (addon) {
+                addonRecords.push({
+                  reservation_id: reservationId,
+                  addon_id: addonId,
+                  quantity: 1,
+                  price_per_day: addon.price_per_day,
+                  total_price: addon.price_per_day * days,
+                });
+              }
+            }
+          }
+
+          if (addonRecords.length > 0) {
+            const { error: addonsError } = await supabase
+              .from("reservation_addons")
+              .insert(addonRecords);
+
+            if (addonsError) {
+              console.error("Error saving addons:", addonsError);
+            }
+          }
+        }
+
         setSubmitStatus({
           type: "success",
           message: "Rezervace byla úspěšně odeslána! Brzy vás budeme kontaktovat.",
@@ -141,6 +265,7 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
         setEmail("");
         setPhone("");
         setNotes("");
+        setSelectedAddons([]);
         setPendingSubmit(false);
         
         setTimeout(() => {
@@ -246,6 +371,81 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
                     <p className="font-bold">
                       💰 Cena: {calculatedPrice.toLocaleString("cs-CZ")} Kč
                     </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Doplňkové položky */}
+            {availableAddons.length > 0 && (
+              <div className="border-2 border-[#3d5a43] rounded-lg overflow-hidden">
+                <div className="bg-[#3d5a43] text-white px-4 py-3">
+                  <h3 className="font-bold uppercase tracking-wide flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Doplňkové služby (volitelné)
+                  </h3>
+                  <p className="text-sm text-white/90 mt-1">
+                    Vyberte si placené doplňky pro větší pohodlí
+                  </p>
+                </div>
+                <div className="p-4 space-y-3">
+                  {loadingAddons ? (
+                    <p className="text-sm text-gray-500 text-center py-4">Načítám dostupné doplňky...</p>
+                  ) : (
+                    availableAddons.map((addon) => {
+                      const isSelected = selectedAddons.includes(addon.id);
+                      const days = dateRange.from && dateRange.to 
+                        ? Math.ceil(Math.abs(dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                        : 1;
+                      const addonTotal = addon.price_per_day * days;
+
+                      return (
+                        <div
+                          key={addon.id}
+                          className={`border-2 rounded-lg p-3 transition-all cursor-pointer ${
+                            isSelected
+                              ? "border-[#3d5a43] bg-green-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                          onClick={() => toggleAddon(addon.id)}
+                        >
+                          <div className="flex gap-3">
+                            <div className="flex-shrink-0 pt-1">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleAddon(addon.id)}
+                                className="mt-1"
+                              />
+                            </div>
+                            {addon.image_url && (
+                              <div className="w-16 h-16 flex-shrink-0">
+                                <img
+                                  src={addon.image_url}
+                                  alt={addon.name}
+                                  className="w-full h-full object-cover rounded"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h4 className="font-bold text-[#2a3d32]">{addon.name}</h4>
+                              {addon.description && (
+                                <p className="text-sm text-gray-600 mt-1">{addon.description}</p>
+                              )}
+                              <div className="mt-2 flex items-center gap-3 text-sm">
+                                <span className="font-semibold text-[#3d5a43]">
+                                  {addon.price_per_day.toLocaleString("cs-CZ")} Kč/den
+                                </span>
+                                {days > 1 && (
+                                  <span className="text-gray-600">
+                                    • Celkem: {addonTotal.toLocaleString("cs-CZ")} Kč ({days} {days === 1 ? "den" : days < 5 ? "dny" : "dní"})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
