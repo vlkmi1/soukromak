@@ -55,6 +55,11 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
   const [availableAddons, setAvailableAddons] = useState<Addon[]>([]);
   const [selectedAddons, setSelectedAddons] = useState<number[]>([]);
   const [loadingAddons, setLoadingAddons] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (dateRange.from && dateRange.to) {
@@ -63,13 +68,13 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
   }, [dateRange.from, dateRange.to, selectedAddons]);
 
   useEffect(() => {
-    if (selectedSpots.length > 0) {
+    if (isMounted && selectedSpots.length > 0) {
       loadAvailableAddons();
     } else {
       setAvailableAddons([]);
       setSelectedAddons([]);
     }
-  }, [selectedSpots]);
+  }, [selectedSpots, isMounted]);
 
   const loadAvailableAddons = async () => {
     setLoadingAddons(true);
@@ -376,8 +381,8 @@ export function ReservationForm({ selectedSpots, selectedDates, dateRange, fishe
               </div>
             )}
 
-            {/* Doplňkové položky */}
-            {availableAddons.length > 0 && (
+            {/* Doplňkové položky - pouze na client side po mounted */}
+            {isMounted && availableAddons.length > 0 && (
               <div className="border-2 border-[#3d5a43] rounded-lg overflow-hidden">
                 <div className="bg-[#3d5a43] text-white px-4 py-3">
                   <h3 className="font-bold uppercase tracking-wide flex items-center gap-2">
