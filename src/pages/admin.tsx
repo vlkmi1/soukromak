@@ -115,7 +115,7 @@ export default function AdminPage() {
   const [pinError, setPinError] = useState(false);
   const [reservations, setReservations] = useState<any[]>([]);
   const [groupedReservations, setGroupedReservations] = useState<GroupedReservation[]>([]);
-  const [filteredReservations, setFilteredReservations] = useState<any[]>([]);
+  const [filteredReservations, setFilteredReservations] = useState<GroupedReservation[]>([]);
   const [activeFilter, setActiveFilter] = useState<ReservationStatus | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [occupancyDate, setOccupancyDate] = useState(new Date());
@@ -466,87 +466,78 @@ export default function AdminPage() {
 
       <main className="flex-1 py-8">
         <div className="container">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Admin panel</h1>
-              <p className="text-muted-foreground text-lg">Správa rezervací {siteName}</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Celkem</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                </CardContent>
-              </Card>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-2">Admin panel</h1>
+            <p className="text-muted-foreground text-lg">Správa rezervací {siteName}</p>
+          </div>
 
-              <button
-                onClick={() => router.push("/admin/nastaveni-mist")}
-                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
-              >
-                <MapPin className="h-12 w-12 mb-4 text-[#2a3d32]" />
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
-                  Nastavení míst
-                </h2>
-                <p className="text-sm mt-2 text-gray-600">Editor pozic lovných míst</p>
-              </button>
+          {/* Navigační karty */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <button
+              onClick={() => router.push("/admin/nastaveni-mist")}
+              className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+            >
+              <MapPin className="h-12 w-12 mb-4 text-[#2a3d32]" />
+              <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                Nastavení míst
+              </h2>
+              <p className="text-sm mt-2 text-gray-600">Editor pozic lovných míst</p>
+            </button>
 
-              <button
-                onClick={() => router.push("/admin/nastaveni-brandu")}
-                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
-              >
-                <Palette className="h-12 w-12 mb-4 text-[#2a3d32]" />
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
-                  Nastavení brandu
-                </h2>
-                <p className="text-sm mt-2 text-gray-600">Barvy, fonty, kontakt</p>
-              </button>
+            <button
+              onClick={() => router.push("/admin/nastaveni-brandu")}
+              className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+            >
+              <Palette className="h-12 w-12 mb-4 text-[#2a3d32]" />
+              <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                Nastavení brandu
+              </h2>
+              <p className="text-sm mt-2 text-gray-600">Barvy, fonty, kontakt</p>
+            </button>
 
-              <button
-                onClick={() => router.push("/admin/editor")}
-                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
-              >
-                <FileEdit className="h-12 w-12 mb-4 text-[#2a3d32]" />
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
-                  Editor stránek
-                </h2>
-                <p className="text-sm mt-2 text-gray-600">Správa článků a obsahu</p>
-              </button>
+            <button
+              onClick={() => router.push("/admin/editor")}
+              className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+            >
+              <FileEdit className="h-12 w-12 mb-4 text-[#2a3d32]" />
+              <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                Editor stránek
+              </h2>
+              <p className="text-sm mt-2 text-gray-600">Správa článků a obsahu</p>
+            </button>
 
-              <button
-                onClick={() => router.push("/admin/galerie")}
-                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
-              >
-                <ImageIcon className="h-12 w-12 mb-4 text-[#2a3d32]" />
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
-                  Fotogalerie
-                </h2>
-                <p className="text-sm mt-2 text-gray-600">Upload a správa fotek</p>
-              </button>
+            <button
+              onClick={() => router.push("/admin/galerie")}
+              className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+            >
+              <ImageIcon className="h-12 w-12 mb-4 text-[#2a3d32]" />
+              <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                Fotogalerie
+              </h2>
+              <p className="text-sm mt-2 text-gray-600">Upload a správa fotek</p>
+            </button>
 
-              <button
-                onClick={() => router.push("/admin/cenik")}
-                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
-              >
-                <DollarSign className="h-12 w-12 mb-4 text-[#2a3d32]" />
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
-                  Ceník
-                </h2>
-                <p className="text-sm mt-2 text-gray-600">Správa cen balíčků</p>
-              </button>
+            <button
+              onClick={() => router.push("/admin/cenik")}
+              className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+            >
+              <DollarSign className="h-12 w-12 mb-4 text-[#2a3d32]" />
+              <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                Ceník
+              </h2>
+              <p className="text-sm mt-2 text-gray-600">Správa cen balíčků</p>
+            </button>
 
-              <button
-                onClick={() => router.push("/admin/doplnky")}
-                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
-              >
-                <Package className="h-12 w-12 mb-4 text-[#2a3d32]" />
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
-                  Doplňky
-                </h2>
-                <p className="text-sm mt-2 text-gray-600">Správa doplňkových položek</p>
-              </button>
-            </div>
+            <button
+              onClick={() => router.push("/admin/doplnky")}
+              className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+            >
+              <Package className="h-12 w-12 mb-4 text-[#2a3d32]" />
+              <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                Doplňky
+              </h2>
+              <p className="text-sm mt-2 text-gray-600">Správa doplňkových položek</p>
+            </button>
           </div>
 
           {/* Přehled obsazenosti rybníku */}
