@@ -870,26 +870,10 @@ export default function AdminPage() {
                             const StatusIcon = STATUS_CONFIG[reservation.status].icon;
                             
                             return (
-                              <TableRow key={reservation.id}>
+                              <TableRow key={reservation.groupId}>
                                 <TableCell>
                                   <div className="font-mono text-xs text-gray-500">
-                                    #{reservation.id.toString().slice(0, 8)}
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="font-semibold">{reservation.customer_name}</div>
-                                  <div className="text-xs text-gray-500">{reservation.customer_email}</div>
-                                  <div className="text-xs text-gray-500">{reservation.customer_phone}</div>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <MapPin className="h-4 w-4 text-gray-400" />
-                                    <span className="font-semibold">
-                                      #{reservation.fishing_spots?.number || "?"}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      (pozice {reservation.spot_positions?.position_number || "?"})
-                                    </span>
+                                    #{reservation.ids[0].toString().slice(0, 8)}
                                   </div>
                                 </TableCell>
                                 <TableCell>
@@ -897,6 +881,29 @@ export default function AdminPage() {
                                     {format(new Date(reservation.start_date), "d.M.yyyy", { locale: cs })}
                                     {" - "}
                                     {format(new Date(reservation.end_date), "d.M.yyyy", { locale: cs })}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <MapPin className="h-4 w-4 text-gray-400" />
+                                    <span className="font-semibold">
+                                      {reservation.spotNumbers.map(n => `#${n}`).join(", ")}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      ({reservation.anglerCount} {reservation.anglerCount === 1 ? "rybář" : "rybáři"})
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="font-semibold">{reservation.customer_name}</div>
+                                  <div className="text-xs text-gray-500">{reservation.customer_email}</div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="text-xs text-gray-500">{reservation.customer_phone}</div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="font-semibold">
+                                    {reservation.price?.toLocaleString("cs-CZ") || 0} Kč
                                   </div>
                                 </TableCell>
                                 <TableCell>
@@ -915,28 +922,10 @@ export default function AdminPage() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <div className="font-semibold">
-                                    {reservation.price?.toLocaleString("cs-CZ") || 0} Kč
-                                  </div>
-                                  {reservation.reservation_addons && reservation.reservation_addons.length > 0 && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      <div className="flex items-center gap-1">
-                                        <Package className="h-3 w-3" />
-                                        <span>Doplňky:</span>
-                                      </div>
-                                      {reservation.reservation_addons.map((ra: any, idx: number) => (
-                                        <div key={idx} className="ml-4">
-                                          • {ra.addons?.name}: {ra.total_price?.toLocaleString("cs-CZ")} Kč
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </TableCell>
-                                <TableCell>
                                   <Select
                                     value={reservation.status}
                                     onValueChange={(value) =>
-                                      updateReservationStatus([reservation.id], value as ReservationStatus)
+                                      updateReservationStatus(reservation.ids, value as ReservationStatus)
                                     }
                                   >
                                     <SelectTrigger className="w-[140px]">
