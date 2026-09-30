@@ -236,22 +236,6 @@ export default function AddonsPage() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `addons/${fileName}`;
 
-      // Nejdřív zkontrolovat jestli bucket existuje, pokud ne, vytvořit
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some((b) => b.name === "addon-images");
-
-      if (!bucketExists) {
-        const { error: bucketError } = await supabase.storage.createBucket("addon-images", {
-          public: true,
-          fileSizeLimit: 2097152, // 2MB po optimalizaci
-        });
-
-        if (bucketError) {
-          console.error("Error creating bucket:", bucketError);
-          throw new Error("Nepodařilo se vytvořit úložiště pro obrázky");
-        }
-      }
-
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("addon-images")
         .upload(filePath, optimizedFile, {
