@@ -5,7 +5,25 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, MapPin, FileText, ImageIcon, Settings, DollarSign, Package } from "lucide-react";
+import { 
+  Calendar, 
+  MapPin, 
+  FileText, 
+  ImageIcon, 
+  Settings, 
+  DollarSign, 
+  Package,
+  Lock,
+  Clock,
+  CheckCircle,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Phone,
+  Palette,
+  FileEdit
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   Card,
@@ -25,6 +43,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { addDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
