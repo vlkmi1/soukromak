@@ -269,10 +269,13 @@ export default function AddonsPage() {
         .from("addon-images")
         .getPublicUrl(filePath);
 
-      setFormData((prev) => ({
-        ...prev,
-        image_url: urlData.publicUrl,
-      }));
+      setEditingAddon((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          image_url: urlData.publicUrl,
+        };
+      });
 
       toast({
         title: "Úspěch",
