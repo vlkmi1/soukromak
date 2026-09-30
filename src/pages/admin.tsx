@@ -2,19 +2,32 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, Eye, DollarSign, XCircle, CheckCircle, Clock, Palette, Lock, ChevronLeft, ChevronRight, Users, Phone } from "lucide-react";
-import { FileEdit, Image as ImageIcon } from "lucide-react";
-import { format, addDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { cs } from "date-fns/locale";
+import { Calendar, MapPin, FileText, ImageIcon, Settings, DollarSign, Package } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { format } from "date-fns";
+import { cs } from "date-fns/locale";
+import { addDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/pricing";
 
@@ -487,6 +500,17 @@ export default function AdminPage() {
                   Ceník
                 </h2>
                 <p className="text-sm mt-2 text-gray-600">Správa cen balíčků</p>
+              </button>
+
+              <button
+                onClick={() => router.push("/admin/doplnky")}
+                className="p-6 border-2 bg-white border-gray-300 hover:border-[#3d5a43] text-left transition-all"
+              >
+                <Package className="h-12 w-12 mb-4 text-[#2a3d32]" />
+                <h2 className="text-xl font-bold uppercase tracking-wide text-[#2a3d32]">
+                  Doplňky
+                </h2>
+                <p className="text-sm mt-2 text-gray-600">Správa doplňkových položek</p>
               </button>
             </div>
           </div>
