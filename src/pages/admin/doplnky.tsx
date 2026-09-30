@@ -45,6 +45,67 @@ export default function AddonsPage() {
   const [editingAddon, setEditingAddon] = useState<Addon | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteAddonId, setDeleteAddonId] = useState<number | null>(null);
+
+  /**
+   * Optimalizovat obrázek před uploadem
+   * - Resize na max 800px šířku
+   * - Komprese kvalita 85%
+   */
+  const optimizeImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      img.onload = () => {
+        // Výpočet nových rozměrů (max šířka 800px)
+        const MAX_WIDTH = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = (height * MAX_WIDTH) / width;
+          width = MAX_WIDTH;
+        }
+
+        // Nastavit canvas rozměry
+        canvas.width = width;
+        canvas.height = height;
+
+        // Vykreslit obrázek
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Konvertovat na blob s kompresí
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Nepodařilo se optimalizovat obrázek"));
+              return;
+            }
+
+            // Vytvořit nový File objekt
+            const optimizedFile = new File(
+              [blob],
+              file.name.replace(/\.[^.]+$/, ".jpg"), // Změnit příponu na .jpg
+              { type: "image/jpeg" }
+            );
+
+            resolve(optimizedFile);
+          },
+          "image/jpeg",
+          0.85 // Kvalita 85%
+        );
+      };
+
+      img.onerror = () => {
+        reject(new Error("Nepodařilo se načíst obrázek"));
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   useEffect(() => {
     const checkAuth = () => {
@@ -138,33 +199,90 @@ export default function AddonsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validace typu souboru
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Chyba",
+        description: "Vyberte prosím obrázek (PNG, JPG, WebP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validace velikosti (max 5MB před optimalizací)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Chyba",
+        description: "Obrázek je příliš velký (max 5MB)",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploadingImage(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `addon-${Date.now()}.${fileExt}`;
+      // Optimalizovat obrázek
+      toast({
+        title: "Zpracovávám",
+        description: "Optimalizuji obrázek...",
+      });
+
+      const optimizedFile = await optimizeImage(file);
+
+      console.log("Original size:", file.size, "Optimized size:", optimizedFile.size);
+
+      // Upload do Supabase Storage
+      const fileExt = "jpg"; // Vždy jpg po optimalizaci
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `addons/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("images")
-        .upload(filePath, file);
+      // Nejdřív zkontrolovat jestli bucket existuje, pokud ne, vytvořit
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some((b) => b.name === "addon-images");
 
-      if (uploadError) throw uploadError;
+      if (!bucketExists) {
+        const { error: bucketError } = await supabase.storage.createBucket("addon-images", {
+          public: true,
+          fileSizeLimit: 2097152, // 2MB po optimalizaci
+        });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("images")
+        if (bucketError) {
+          console.error("Error creating bucket:", bucketError);
+          throw new Error("Nepodařilo se vytvořit úložiště pro obrázky");
+        }
+      }
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("addon-images")
+        .upload(filePath, optimizedFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
+
+      // Získat veřejnou URL
+      const { data: urlData } = supabase.storage
+        .from("addon-images")
         .getPublicUrl(filePath);
 
-      setEditingAddon((prev) => prev ? { ...prev, image_url: publicUrl } : null);
+      setFormData((prev) => ({
+        ...prev,
+        image_url: urlData.publicUrl,
+      }));
 
       toast({
-        title: "Hotovo",
-        description: "Obrázek byl nahrán.",
+        title: "Úspěch",
+        description: "Obrázek byl úspěšně nahrán a optimalizován",
       });
     } catch (error: any) {
       console.error("Error uploading image:", error);
       toast({
-        title: "Chyba",
-        description: "Nepodařilo se nahrát obrázek: " + error.message,
+        title: "Chyba při nahrávání",
+        description: error.message || "Nepodařilo se nahrát obrázek",
         variant: "destructive",
       });
     } finally {
