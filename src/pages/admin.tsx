@@ -240,8 +240,17 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase
         .from("reservations")
-        .select("*, fishing_spots(number)")
-        .order("start_date", { ascending: true })
+        .select(`
+          *,
+          fishing_spots (number),
+          spot_positions (position_number),
+          reservation_addons (
+            addon_id,
+            quantity,
+            total_price,
+            addons (name)
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -861,80 +870,83 @@ export default function AdminPage() {
                             const StatusIcon = STATUS_CONFIG[reservation.status].icon;
                             
                             return (
-                              <TableRow key={reservation.groupId}>
-                                <TableCell className="font-mono text-sm">
-                                  #{reservation.ids[0]}
+                              <TableRow key={reservation.id}>
+                                <TableCell>
+                                  <div className="font-mono text-xs text-gray-500">
+                                    #{reservation.id.toString().slice(0, 8)}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="font-semibold">{reservation.customer_name}</div>
+                                  <div className="text-xs text-gray-500">{reservation.customer_email}</div>
+                                  <div className="text-xs text-gray-500">{reservation.customer_phone}</div>
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <div className="text-sm">
-                                      <div>
-                                        {format(new Date(reservation.start_date), "d. MMM", { locale: cs })} - {format(new Date(reservation.end_date), "d. MMM yyyy", { locale: cs })}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="font-medium">
-                                  {reservation.spotNumbers.length === 1 ? (
-                                    `Místo #${reservation.spotNumbers[0]}`
-                                  ) : (
-                                    `Místa #${reservation.spotNumbers.join(", #")}`
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <div>
-                                    <div className="font-medium">{reservation.customer_name}</div>
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                      <Users className="h-3 w-3" />
-                                      <span>{reservation.anglerCount} {reservation.anglerCount === 1 ? "rybář" : "rybáři"}</span>
-                                    </div>
-                                    {reservation.notes && (
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        {reservation.notes}
-                                      </div>
-                                    )}
+                                    <MapPin className="h-4 w-4 text-gray-400" />
+                                    <span className="font-semibold">
+                                      #{reservation.fishing_spots?.number || "?"}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      (pozice {reservation.spot_positions?.position_number || "?"})
+                                    </span>
                                   </div>
                                 </TableCell>
                                 <TableCell>
                                   <div className="text-sm">
-                                    <div>{reservation.customer_email}</div>
-                                    <div className="text-muted-foreground">
-                                      {reservation.customer_phone}
-                                    </div>
+                                    {format(new Date(reservation.start_date), "d.M.yyyy", { locale: cs })}
+                                    {" - "}
+                                    {format(new Date(reservation.end_date), "d.M.yyyy", { locale: cs })}
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  {reservation.price ? (
-                                    <div className="font-medium">{formatPrice(reservation.price)}</div>
-                                  ) : (
-                                    <span className="text-muted-foreground text-sm">—</span>
-                                  )}
+                                  <Badge
+                                    variant={
+                                      reservation.status === "paid" ? "default" :
+                                      reservation.status === "confirmed" ? "secondary" :
+                                      reservation.status === "cancelled" ? "destructive" :
+                                      "outline"
+                                    }
+                                  >
+                                    {reservation.status === "paid" ? "Zaplaceno" :
+                                     reservation.status === "confirmed" ? "Potvrzeno" :
+                                     reservation.status === "cancelled" ? "Stornováno" :
+                                     "Nová"}
+                                  </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge
-                                    variant="secondary"
-                                    className={`${STATUS_CONFIG[reservation.status].color} text-white`}
-                                  >
-                                    <StatusIcon className="mr-1 h-3 w-3" />
-                                    {STATUS_CONFIG[reservation.status].label}
-                                  </Badge>
+                                  <div className="font-semibold">
+                                    {reservation.price?.toLocaleString("cs-CZ") || 0} Kč
+                                  </div>
+                                  {reservation.reservation_addons && reservation.reservation_addons.length > 0 && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      <div className="flex items-center gap-1">
+                                        <Package className="h-3 w-3" />
+                                        <span>Doplňky:</span>
+                                      </div>
+                                      {reservation.reservation_addons.map((ra: any, idx: number) => (
+                                        <div key={idx} className="ml-4">
+                                          • {ra.addons?.name}: {ra.total_price?.toLocaleString("cs-CZ")} Kč
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <Select
                                     value={reservation.status}
                                     onValueChange={(value) =>
-                                      updateReservationStatus(reservation.ids, value as ReservationStatus)
+                                      handleStatusChange(reservation.id, value as any)
                                     }
                                   >
-                                    <SelectTrigger className="w-40">
+                                    <SelectTrigger className="w-[140px]">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="new">Nová</SelectItem>
-                                      <SelectItem value="confirmed">Potvrzená</SelectItem>
-                                      <SelectItem value="paid">Zaplacená</SelectItem>
-                                      <SelectItem value="cancelled">Stornovaná</SelectItem>
+                                      <SelectItem value="confirmed">Potvrzeno</SelectItem>
+                                      <SelectItem value="paid">Zaplaceno</SelectItem>
+                                      <SelectItem value="cancelled">Stornováno</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </TableCell>
